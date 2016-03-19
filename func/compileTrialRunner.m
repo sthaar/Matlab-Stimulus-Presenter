@@ -2,6 +2,9 @@ function [ boolSucces ] = compileTrialRunner( varargin )
 %% compileTrialRunner( events, template, desti )
 %   compileTrialRunner compiles all the working events into a script
 %   Compiles all Needed functions into one trial looping script.
+%   events:     Cell containing all event names (given by event.m -> getName())
+%   template:   string containing the template file, default: 'func/compileData/compileTrialScriptTemplate.m'
+%   desti:      The destination script, default: 'func/runTrial.m'
 boolSucces = false;
 
 %% input
@@ -19,13 +22,13 @@ if nargin == 2
     template = varargin{2};
 end
 if nargin == 3
-    template = varargin{3};
+    desti = varargin{3};
 end
 
 %% build paths
 template = fullfile(cd,template);
 desti = fullfile(cd,desti);
-eventDir = fullfule(cd,eventDir);
+eventDir = fullfile(cd,eventDir);
 
 %% checks
 % Template must exist. Duhh..
@@ -37,8 +40,8 @@ if ~exist(eventDir,'dir')
     error('Events directory missing! (%s)', eventDir);
 end
 
-if ~isstruct(events)
-    error('Invalid event list container. Container must be struct.');
+if ~iscell(events)
+    error('Invalid event list container. Container must be cell.');
 end
 
 if length(events) < 1
@@ -53,18 +56,21 @@ nFiles = length(files);
 eventFiles = {};
 eventNames = {};
 it = 0;
+prevPath = addpath(eventDir); % Add event directory to path (reset in the next section)
 for iFile = nFiles
     it = it + 1;
-    file = files{iFile};
+    file = files(iFile);
     namewe = file.name(1:end-2);
-    path = fullfile(cd,eventDir,file.name);
-    if exist(path,'file') && ~file.isdir && strcmp(file.name(end-2:end),'.m')
+    path_ = fullfile(eventDir,file.name);
+    if exist(path_,'file')==2 && ~file.isdir && strcmp(file.name(end-1:end),'.m')
         try
-            res = eval([namewe, '(''getName'')']);
-            eventNames{it} = res;
-            eventFiles{it} = namewe;
+            if eval([namewe, '(''enabled'')'])
+                res = eval([namewe, '(''getName'')']);
+                eventNames{it} = res;
+                eventFiles{it} = namewe;
+            end
         catch
-            it = it - 1;
+            it = it - 1; % Function did not exist.
         end
     end
 end
@@ -72,10 +78,23 @@ end
 eventMap = containers.Map(eventNames,eventFiles);
 
 %% Check if all events exist and load them
-for event = events
+% Loads all event functions (and thus caches them in memory)
+loadFuns = {}; % index linked to eventFuns & eventNames
+eventFuns = {}; 
+eventNames = {};
+load_loadfun = @(name)eval([name, '(''getLoadFun'')']);
+load_eventfun = @(name)eval([name, '(''getRunFun'')']);
+index = 1;
+for eventCell = events
     try
+        event = eventCell{1};
         eventFun = eventMap(event);
-        %% TODO
+        % Load
+        loadFuns{index} = load_loadfun(eventFun);
+        eventFuns{index} = load_eventfun(eventFun);
+        eventNames{index} = event;
+        % done
+        index = index + 1; % If succesfull, increment index
     catch e
         if strcmp(e.identifier,'MATLAB:Containers:Map:NoKey')
             error('Missing event: %s',event)
@@ -84,21 +103,76 @@ for event = events
         end
     end
 end
-
+path(prevPath); % Restore path
 %% Process/compile
 % Open
 try
     fTemplate = fopen(template,'r');
     fDesti = fopen(desti,'w+');
 catch e
-    print('A runtime error occured while compiling (fopen): \n',e.message);
+    fprintf('A runtime error occured while compiling (fopen): %s\n',e.message);
     return
 end
 
 %write/read & insert
+    % We have 3 cases:
+    %   \\runload
+    %   \\load
+    %   \\run
+    % when either of these appear in the line, we replace the line
+    % with the load&run scrips, load scrips and run scrips respectively
+    % Note: This is case Sensitive!
 try
-    
+    line = fgets(fTemplate); % Get first line
+    while ischar(line) % As long as we get text
+        line = strrep(line,'%','%%'); % replace comments
+        if ~isempty(strfind(line,'\\runload'))
+            % ----- Load and run -----
+            for i = 1:length(eventNames)
+                name = eventNames{i};
+                loadFun = loadFuns{i};
+                runFun = eventFuns{i};
+                fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
+                fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);
+                fprintf(fDesti,loadFun);
+                fprintf(fDesti,'\r\n'); % an extra new line never hurts
+                fprintf(fDesti,runFun);
+                fprintf(fDesti,'\r\nend\r\n');
+            end
+            % ----- load Data -----
+        elseif ~isempty(strfind(line,'\\load'))
+            for i = 1:length(eventNames)
+                name = eventNames{i};
+                loadFun = loadFuns{i};
+                runFun = eventFuns{i};
+                fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
+                fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);
+                fprintf(fDesti,loadFun);
+                fprintf(fDesti,'\r\nend\r\n');
+            end
+            % ----- run with data -----
+        elseif ~isempty(strfind(line,'\\run'))
+            for i = 1:length(eventNames)
+                name = eventNames{i};
+                loadFun = loadFuns{i};
+                runFun = eventFuns{i};
+                fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
+                fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);
+                fprintf(fDesti,runFun);
+                fprintf(fDesti,'\r\nend\r\n');
+            end
+            % ----- print template -----
+        else
+            fprintf(fDesti,line);
+        end
+        
+        line = fgets(fTemplate); % Get new line
+    end
 catch e
-    print('A runtime error occured while compiling (write/read): \n',e.message);
+    fprintf('A runtime error occured while compiling (write/read): %s\n',e.message);
     return
+end
+boolSucces = true;
+fclose(fDesti);
+fclose(fTemplate);
 end

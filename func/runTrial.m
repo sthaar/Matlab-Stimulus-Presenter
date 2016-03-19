@@ -1,5 +1,5 @@
 % 0Template note:
-%   \\ means insert
+%   \ means insert
 % things you can insert:
 %   load => Loading script
 %   run => running script
@@ -59,17 +59,27 @@ switch mode
     case 0
         for i=1:nEvents
             eventName = events(i).name;
-            \\runload
+% generated script "Example" from example.m
+if strcmp(eventName,'Example')
+event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)
+whatIDo(event.myOwnNameForMyData)
+end
         end
     %% preload  
     case 1
         for i=1:nEvents % load
             eventName = events(i).name;
-            \\load
+% generated script "Example" from example.m
+if strcmp(eventName,'Example')
+event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)
+end
         end
         for i=1:nEvents % run
             eventName = events(i).name;
-            \\run
+% generated script "Example" from example.m
+if strcmp(eventName,'Example')
+whatIDo(event.myOwnNameForMyData)
+end
         end
     otherwise
         error('Unknown trial run mode')

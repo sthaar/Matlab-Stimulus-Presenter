@@ -61,11 +61,15 @@ function res = gateway(varargin)
             res = getEventName(); % unique identifier name in string. this will be what the user sees
         case 'dataType'
             res = dataType(); %What type of data does your event use? Images (and thus paths), or numbers?
+		case 'enabled'
+			res = enabled();
+        otherwise
+            error('Unknown command "%s"',command);
     end
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Template';
+    out = 'Example';
 end
 
 function out = dataType()
@@ -78,7 +82,13 @@ function out = dataType()
 end
 
 function out = init()
-    out = false; %Prevents this template being included. This can be used as on and off switch.
+	global error % global error is read when a example returns false
+	error = 'Example must not be included in a running experiemnt!.';
+    out = true; %If out == false, the loading of the experiment will be cancled. 
+end
+
+function out = enabled()
+	out = true; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
