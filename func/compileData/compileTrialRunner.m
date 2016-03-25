@@ -9,7 +9,7 @@ boolSucces = false;
 
 %% input
 template = 'func/compileData/compileTrialScriptTemplate.m';
-desti = 'func/runTrial.m';
+desti = 'func/experiment/runTrial.m';
 eventDir = 'Events';
 
 if nargin == 0
@@ -144,17 +144,19 @@ try
             for i = 1:length(eventNames)
                 name = eventNames{i};
                 loadFun = loadFuns{i};
-                runFun = eventFuns{i};
-                fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
-                fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);
-                fprintf(fDesti,loadFun);
-                fprintf(fDesti,'\r\nend\r\n');
+                if ~strcmp(loadFun,'')
+                    fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
+                    fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);
+                    fprintf(fDesti,loadFun);
+                    fprintf(fDesti,'\r\nend\r\n');
+                else
+                    fprintf(fDesti,'%% event %s has no load function. (%s)',name,eventMap(name));
+                end
             end
             % ----- run with data -----
         elseif ~isempty(strfind(line,'\\run'))
             for i = 1:length(eventNames)
                 name = eventNames{i};
-                loadFun = loadFuns{i};
                 runFun = eventFuns{i};
                 fprintf(fDesti,'%% generated script "%s" from %s.m\r\n',name,eventMap(name));
                 fprintf(fDesti,'if strcmp(eventName,''%s'')\r\n',name);

@@ -7,25 +7,30 @@ function h = eventEditor(questionStruct)
 %       0:      Cancled
 %       -1:     Shit happend... (invalid input, etc)
 % Example of a question struct:
-questionStruct(1).name = 'event Type';
-questionStruct(1).sort = 'text';
-questionStruct(1).data = 'EventName';
-
-questionStruct(2).name = 'Time';
-questionStruct(2).sort = 'edit';
-questionStruct(2).data = '';
-
-questionStruct(3).name = 'Random';
-questionStruct(3).sort = 'popup';
-questionStruct(3).data = { 'Yes' ; 'No' };
-
-questionStruct(4).name = 'customName';
-questionStruct(4).sort = 'edit';
-questionStruct(4).data = 'MyCustomName';
-
-questionStruct(5).name = 'Dataset';
-questionStruct(5).sort = 'popupmenu';
-questionStruct(5).data = {'Dataset1', 'Dataset2', 'Dataset3'};
+% questionStruct(1).name = 'event Type';
+% questionStruct(1).sort = 'text';
+% questionStruct(1).data = 'EventName';
+% 
+% questionStruct(2).name = 'Time';
+% questionStruct(2).sort = 'edit';
+% questionStruct(2).data = '';
+% 
+% questionStruct(3).name = 'Random';
+% questionStruct(3).sort = 'popup';
+% questionStruct(3).data = { 'Yes' ; 'No' };
+% questionStruct(3).toolTip = 'Extra mouseover information'
+% 
+% questionStruct(4).name = 'customName';
+% questionStruct(4).sort = 'edit';
+% questionStruct(4).data = 'MyCustomName';
+% 
+% questionStruct(5).name = 'Dataset';
+% questionStruct(5).sort = 'popupmenu';
+% questionStruct(5).data = {'Dataset1', 'Dataset2', 'Dataset3'};
+% 
+% questionStruct(6).name = '';
+% questionStruct(6).sort = 'checkbox';
+% questionStruct(6).data = 'Text?';
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
@@ -35,11 +40,21 @@ global eventEditorFeedback
 eventEditorFeedback = -1; % Error value
 
 %% input check
-% if nargin == 0
-%     error('eventEditor: No input recieved. Please read the instructions of eventEditor');
-% elseif nargin > 1
-%     error('eventEditor: Invalid input, one argument expected.');
-% end
+if nargin == 0
+    error('eventEditor: No input recieved. Please read the instructions of eventEditor');
+elseif nargin > 1
+    error('eventEditor: Invalid input, one argument expected.');
+end
+
+%% Check struct
+if ~isfield(questionStruct, 'name') || ~isfield(questionStruct, 'sort') || ~isfield(questionStruct, 'data')
+    error('The fields "name", "sort" and "Data" are needed');
+end
+
+if ~isfield(questionStruct, 'toolTip')
+    warning('No toolTip field in the questionStruct. Consider the use of those things!');
+    questionStruct(1).toolTip = [];
+end
 
 %% SEttings
 dsx = 5;  %padding
@@ -68,6 +83,12 @@ ystart = pos(4)-dsy;
 handles = struct;
 i=0;
 for question = questionStruct
+    % create tooltip string
+    tooltip = '';
+    if ~isempty(question.toolTip)
+        toolTip = question.toolTip;
+    end
+    
     i = i+1;
     % draw name
     x = xstart;
@@ -75,12 +96,14 @@ for question = questionStruct
     handles(i).text = uicontrol('Style','Text',...
                                 'String',question.name,...
                                 'HorizontalAlignment','right',...
-                                'Position',[x y sx sy]);
+                                'Position',[x y sx sy],...
+                                'TooltipString', toolTip);
     % draw option
     x = xstart + (dx+sx);
     handles(i).quest = uicontrol('Style',question.sort,...
                                 'String',question.data,...
-                                'Position',[x y sx sy]);
+                                'Position',[x y sx sy],...
+                                'TooltipString', toolTip);
                             
 %% Output handle (see function decl.)
 end

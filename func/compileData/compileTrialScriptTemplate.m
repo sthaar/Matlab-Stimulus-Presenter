@@ -58,17 +58,24 @@ switch mode
     %% no preload
     case 0
         for i=1:nEvents
-            eventName = events(i).name;
+            reply = replyData(i);
+            event = events{i};
+            eventName = event.name;
             \\runload
         end
     %% preload  
     case 1
         for i=1:nEvents % load
-            eventName = events(i).name;
+            reply = replyData(i);
+            event = events{i};
+            eventName = event.name;
             \\load
+            events{i} = event; % save event data (that is loaded for the run fun)
         end
         for i=1:nEvents % run
-            eventName = events(i).name;
+            reply = replyData(i);
+            event = events{i};
+            eventName = event.name;
             \\run
         end
     otherwise

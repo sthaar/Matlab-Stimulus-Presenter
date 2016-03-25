@@ -33,7 +33,7 @@ else
    disp('No Psychtoolbox detected');
    
        %Psychtoolbox does not Exist! 
-    %This calls for: SetupPsychtoolbox!!
+    %This calls for: DownloadPsychtoolbox!!
     if ~exist('Psychtoolbox\\DownloadPsychtoolbox.m','file')
         %But it does not exist, not even the installer!
         errordlg('Psychtoolbox tools are not present! Unable to start a experiment!','CALL HELP, RUN! or redownload this...');

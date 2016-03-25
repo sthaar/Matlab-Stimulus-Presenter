@@ -72,8 +72,8 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     %%  Add path
     global oldpath
     oldpath = path;
-    addpath('func');
-    addpath('Menus');
+    addpath(genpath('func'));
+    addpath(genpath('Menus'));
     %% PsychToolbox
     %It needs to be installed so... Lets check it!
     checkPsychtoolbox;
