@@ -30,7 +30,7 @@ function varargout = start(varargin)
 
 % Edit the above text to modify the response to help start
 
-% Last Modified by GUIDE v2.5 05-Jan-2016 11:35:20
+% Last Modified by GUIDE v2.5 28-Mar-2016 16:50:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -142,4 +142,15 @@ global oldpath;
 path(oldpath);
 % and clean the globals
 clear global;
+end
+
+
+% --- Executes on button press in buttonDatasetmananger.
+function buttonDatasetmananger_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonDatasetmananger (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.startMenu,'Visible','off')
+waitfor(datasetMananger());
+set(handles.startMenu,'Visible','on');
 end

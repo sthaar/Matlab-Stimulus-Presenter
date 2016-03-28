@@ -169,5 +169,6 @@ datasetInfo.files = new;
 
 
 %% Finish
+datasetInfo.nFiles = length(datasetInfo.files);
 save(datasetInfoPath,'datasetInfo');
 succes = 1;

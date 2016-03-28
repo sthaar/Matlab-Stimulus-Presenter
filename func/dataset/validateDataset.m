@@ -1,5 +1,6 @@
 function [ intact, missingFiles, invalidInfoFile, doesNotExist] = validateDataset( name )
 %VALIDATEDATASET Validates dataset integrity
+% [ intact, missingFiles, invalidInfoFile, doesNotExist] = validateDataset( name )
 %   Checks if there are missingFiles.
 %   Checks if the info is present
 %   Checks if the dataset exists
@@ -22,7 +23,7 @@ end
 
 %% It does exist: Check if the info is present (struct in .mat file)
 fields = {'settings', 'nFiles', 'name', 'files', 'createdDate', 'filetype' };
-file = fullfile(dataFolder, datasetInfofile);
+file = fullfile(dataFolder,name, datasetInfofile);
 load(file);
 for f = fields
     if ~isfield(datasetInfo, f{1})
@@ -40,10 +41,10 @@ if isfield(datasetInfo, 'files')
     files = datasetInfo.files;
     for i = 1:length(files);
         file = files{i};
-        if ~exist(fullfile(dataFolder, file))
+        if ~exist(fullfile(dataFolder,name, file))
             missingFiles = 1;
             intact = 0;
-            warining('File missing: %s', file);
+            warning('File missing: %s', file);
         end
     end
 end
