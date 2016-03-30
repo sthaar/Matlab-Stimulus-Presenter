@@ -95,7 +95,7 @@ function out = init()
 end
 
 function out = enabled()
-	out = true; %If this function returns false, it will not be included.
+	out = false; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
@@ -141,5 +141,10 @@ function out = getEventStruct(data)
 % The following struct names are in use and will be overwritten
 %   - .name => Contains getEventName()
 %   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
+% IN the last place of the struct (if length was 3, the last place will be
+% 4) will be the dataset name used (if dataType ~= '')
+% You cannot change it, but you can throw an error if you dont want it!
     out = struct;
 end

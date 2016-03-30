@@ -152,13 +152,14 @@ end
 function out = getEventStruct(answersOfQuestions)
 % event.data will be filled with the needed files specified in dataType()
     event = struct;
+    event.alias = answersOfQuestions(1).Value;
     %Delay
     event.delay = str2double( answersOfQuestions(2).answer ) ;
     if isnan(event.delay)
        event.delay = 0; 
     end
     %Clear screen
-    event.clear = eventEditorFeedback(4).Value;
+    event.clear = answersOfQuestions(4).Value;
     
     out = event; %No other data needed
 end

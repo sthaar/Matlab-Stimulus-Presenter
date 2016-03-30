@@ -22,7 +22,7 @@ function varargout = ExperimentEditor(varargin)
 
 % Edit the above text to modify the response to help ExperimentEditor
 
-% Last Modified by GUIDE v2.5 13-Jan-2016 18:12:19
+% Last Modified by GUIDE v2.5 30-Mar-2016 17:47:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,8 +58,75 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% Check input
+if nargin ~= 4
+    delete(hObject);
+    error('Invalid usage: ExperimentEditor(name)');
+end
+
+name = varargin{1};
+if ~ischar(name)
+    delete(hObject);
+    error('name must be a string');
+end
+
+if length(name) < 2
+    delete(hObject);
+    error('name must be longer than 3 characters');
+end
+
+% open experiment
+if ~experimentExists(name)
+    delete(hObject);
+    error('Experiment "%s" does not exist',name);
+end
+
+experiment = getExperiment(name);
+
+handles.experiment = experiment;
+handles.experiment.name = name;
+% experi.name = name;
+% experi.datasetDep = {}; % No dataset dependencies yet
+% experi.eventDep = {}; % No event dependencies yet
+% experi.creator = {}; % Here the blocks with events will be added
+% experi.experiment = {}; % Here the generated experiment will be stored (when exp is run)
+
+guidata(hObject, handles);
+
+guiUpdate(handles);
+
 % UIWAIT makes ExperimentEditor wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
+
+function guiUpdate(handles)
+experi = handles.experiment;
+handles.textExperimentName.String = sprintf('Experiment: %s',experi.name);
+
+% Blocks
+blocks = experi.creator;
+blockList = {};
+if ~isempty((blocks))
+    for i=1:length(blocks)
+        block = blocks{i};
+        blockList = [blockList {block.name}];
+    end
+end
+handles.blockList.String = blockList;
+
+% Selected block info
+idx = handles.blockList.Value;
+if idx > length(handles.blockList.String) || idx == 0;
+    idx = length(handles.blockList.String);
+    if idx == 0
+        idx = 1;
+    end
+end
+infoStr = '';
+if ~isempty(blocks)
+    block = blocks{idx};
+    infoStr = sprintf('Name: %s\n# events: %i', block.name, length(block.events));
+end
+handles.blockInfo.String = infoStr;
 
 
 % --- Outputs from this function are returned to the command line.
@@ -78,7 +145,7 @@ function blockList_Callback(hObject, eventdata, handles)
 % hObject    handle to blockList (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+guiUpdate(handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns blockList contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from blockList
 
@@ -101,6 +168,25 @@ function newTrial_Callback(hObject, eventdata, handles)
 % hObject    handle to newTrial (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+name = inputdlg('Please enter a name for this block...');
+if length(name{1}) < 2
+    waitfor(errordlg('Please enter a name longer than 2'));
+    return
+end
+block = struct;
+block.name = name{1};
+block.events = {};
+waitfor(ExperimentBlockEditor(block));
+global experimentlbockeditorreturnvalue
+newBlock = experimentlbockeditorreturnvalue;
+clear experimentlbockeditorreturnvalue;
+if isstruct(newBlock) && isfield(newBlock,'name') && isfield(newBlock,'events')
+    handles.experiment.creator = [handles.experiment.creator; {newBlock}];
+end
+guidata(handles.figure1, handles)
+guiUpdate(handles);
+
+
 
 
 % --- Executes on button press in addExisting.
@@ -108,6 +194,29 @@ function addExisting_Callback(hObject, eventdata, handles)
 % hObject    handle to addExisting (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+[file,path] = uigetfile('*.mat', 'Open block','Block.mat');
+if exist(fullfile(path, file),'file')
+    try
+        block = load(fullfile(path, file),'block');
+        block = block.block;
+        if ~isfield(block,'name') || ~isfield(block, 'events')
+            error('This is not a block file!')
+        end
+        handles.experiment.creator = [handles.experiment.creator; {block}];
+        guidata(handles.figure1,handles);
+        guiUpdate(handles);
+        
+    catch e
+        errordlg(e.message);
+        rethrow(e);
+    end
+    
+end
+
+
 
 
 % --- Executes on button press in removeBlock.
@@ -115,7 +224,19 @@ function removeBlock_Callback(hObject, eventdata, handles)
 % hObject    handle to removeBlock (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isempty(handles.blockList.String)
+    return
+end
+blockname = handles.blockList.String{handles.blockList.Value};
+experimentName = handles.experiment.name;
+answ = questdlg(sprintf('Are you sure you want to remove %s from %s?', blockname, experimentName),...
+    'You sure?,', 'Yes', 'No', 'No');
+if strcmp(answ, 'Yes')
+    handles.experiment.creator(handles.blockList.Value) = [];
+end
+handles.blockList.Value = handles.blockList.Value - 1;
+guidata(handles.figure1, handles);
+guiUpdate(handles);
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -124,4 +245,110 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: delete(hObject) closes the figure
+try
+    updateExperiment(handles.experiment.name, handles.experiment);
+catch e
+    global experiment
+    experiment = handles.experiment;
+    experi = handles.experiment;
+    file = [handles.experiment.name '.mat'];
+    save(file, 'experi');
+    waitfor(errordlg(sprintf('Oops! Something went wrong while saving!\nWe saved a copy in your current directory (%s)\n%s',...
+        file, 'Also we saved it in global experiment, type global experiment to get it in matlab')));
+    delete(hObject);
+    rethrow(e);
+end
 delete(hObject);
+
+
+% --- Executes on button press in buttonUp.
+function buttonUp_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+loc = handles.blockList.Value;
+if loc==1 %Already in top
+    return
+end
+selected = handles.experiment.creator{handles.blockList.Value};
+res = handles.experiment.creator;
+res(loc) = [];
+newOrder = [res(1:loc-2) {selected} res(loc-1:end)];
+handles.experiment.creator = newOrder;
+handles.blockList.Value = handles.blockList.Value - 1;
+guidata(handles.figure1, handles);
+guiUpdate(handles);
+
+% --- Executes on button press in buttonDown.
+function buttonDown_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonDown (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+loc = handles.blockList.Value;
+if loc==length(handles.blockList.String) %Already in top
+    return
+end
+selected = handles.experiment.creator{handles.blockList.Value};
+res = handles.experiment.creator;
+res(loc) = [];
+newOrder = [res(1:loc) {selected} res(loc+1:end)];
+handles.experiment.creator = newOrder;
+handles.blockList.Value = handles.blockList.Value + 1;
+guidata(handles.figure1, handles);
+guiUpdate(handles);
+
+% --- Executes on button press in buttonSaveBlock.
+function buttonSaveBlock_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonSaveBlock (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+[file,path] = uiputfile('*.mat', 'Save block as...','Block.mat');
+if exist(fullfile(path, file))
+    answ = questdlg(sprintf('Do you want to overwrite %s?',file),'Overwrite?!', 'Yes', 'No', 'No');
+    if strcmp(answ, 'No')
+        waitfor(msgbox('Save aborted...'));
+        return
+    end
+end
+block = handles.experiment.creator{handles.blockList.Value};
+save(fullfile(path,file),'block');
+
+    
+
+
+% --- Executes on button press in buttonEdit.
+function buttonEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+block = handles.experiment.creator{handles.blockList.Value};
+
+waitfor(ExperimentBlockEditor(block));
+global experimentlbockeditorreturnvalue
+newBlock = experimentlbockeditorreturnvalue;
+clear experimentlbockeditorreturnvalue;
+if isstruct(newBlock) && isfield(newBlock,'name') && isfield(newBlock,'events')
+    %handles.experiment.creator = [handles.experiment.creator; {newBlock}];
+    handles.experiment.creator{handles.blockList.Value} = newBlock;
+end
+guidata(handles.figure1, handles)
+guiUpdate(handles);
+
+
+% --- Executes during object deletion, before destroying properties.
+function figure1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

@@ -84,7 +84,7 @@ handles = struct;
 i=0;
 for question = questionStruct
     % create tooltip string
-    tooltip = '';
+    toolTip = '';
     if ~isempty(question.toolTip)
         toolTip = question.toolTip;
     end

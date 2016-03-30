@@ -57,14 +57,14 @@ eventFiles = {};
 eventNames = {};
 it = 0;
 prevPath = addpath(eventDir); % Add event directory to path (reset in the next section)
-for iFile = nFiles
-    it = it + 1;
+for iFile = 1:nFiles
     file = files(iFile);
     namewe = file.name(1:end-2);
     path_ = fullfile(eventDir,file.name);
     if exist(path_,'file')==2 && ~file.isdir && strcmp(file.name(end-1:end),'.m')
         try
             if eval([namewe, '(''enabled'')'])
+                it = it + 1;
                 res = eval([namewe, '(''getName'')']);
                 eventNames{it} = res;
                 eventFiles{it} = namewe;

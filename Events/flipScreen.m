@@ -135,7 +135,7 @@ function out = getQuestStruct()
     out = q; %See eventEditor
 end
 
-function out = getEventStruct(data)
+function out = getEventStruct(answersOfQuestions)
     event = struct;
     %Delay
     event.delay = str2double( answersOfQuestions(1).answer ) ;
@@ -143,7 +143,7 @@ function out = getEventStruct(data)
        event.delay = 0; 
     end
     %Clear screen
-    event.clear = eventEditorFeedback(2).Value;
+    event.clear = answersOfQuestions(2).Value;
     
     out = event; %No other data needed
 end
