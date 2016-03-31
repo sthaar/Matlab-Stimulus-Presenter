@@ -232,13 +232,23 @@ if ~isempty(handles.eventSelectorMenu.String)
                 datasets = getDatasets();
                 if isempty(datasets)
                     error('No dataset avaible! Please create one before using this event!');
-                    questStruct(l+1).name = 'Choose Dataset:';
-                    questStruct(l+1).sort = 'text';
-                    questStruct(l+1).data = 'No datasets available';
+%                     questStruct(l+1).name = 'Dataset settings:';
+%                     questStruct(l+1).sort = 'text';
+%                     questStruct(l+1).data = 'No datasets available';
                 else
+                    %What dataset?
                     questStruct(l+1).name = 'Choose Dataset:';
                     questStruct(l+1).sort = 'popupmenu';
                     questStruct(l+1).data = datasets;
+                    %Random?
+                    questStruct(l+2).name = 'Random selection?';
+                    questStruct(l+2).sort = 'popupmenu';
+                    questStruct(l+2).data = {'No', 'Yes'};
+                    %put back?
+                    questStruct(l+3).name = 'Put back?';
+                    questStruct(l+3).sort = 'popupmenu';
+                    questStruct(l+3).data = {'No', 'Yes'};
+                    questStruct(l+3).toolTip = 'In dutch, one would say: Met terugleggen. Meaning stimuli can be selected more than once';
                 end
             end
             if ~isempty(fieldnames(questStruct))
@@ -249,11 +259,15 @@ if ~isempty(handles.eventSelectorMenu.String)
                     % We got our answers. Use the add answer stuff
                     if ~strcmp(type,'')
                         % Data is requested!
-                        dataset = answers(l+1).String;
+                        dataset = answers(l+1).answer;
+                        random = answers(l+2).Value;
+                        putBack = answers(l+3).Value;
                     end
                     eventStruct = eval(sprintf('%s(''getEventStruct'',answers)',eventfile));
                     if ~strcmp(type,'')
                         eventStruct.dataset = dataset;
+                        eventStruct.randomData = random-1;
+                        eventStruct.putBack = putBack-1;
                     end
                     % event.name = the name given by event('getName')
                     % event.alias is displayed if it exist
@@ -282,28 +296,31 @@ function buttonRemoveSelected_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonRemoveSelected (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isempty(handles.eventList.String)
+    return
+end
+handles.blockData.events(handles.eventList.Value) = [];
+guidata(handles.figure1, handles);
+guiUpdate(handles);
 
 % --- Executes on button press in buttonDuplicateSelected.
 function buttonDuplicateSelected_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonDuplicateSelected (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isempty(handles.eventList.String)
+    return
+end
+event = handles.blockData.events(handles.eventList.Value);
+handles.blockData.events = [handles.blockData.events event];
+guidata(handles.figure1, handles);
+guiUpdate(handles);
 
 % --- Executes on button press in buttonEditSelected.
 function buttonEditSelected_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonEditSelected (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in buttonClose.
-function buttonClose_Callback(hObject, eventdata, handles)
-% hObject    handle to buttonClose (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 
 

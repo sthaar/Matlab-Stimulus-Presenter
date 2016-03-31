@@ -146,5 +146,8 @@ function out = getEventStruct(data)
 % IN the last place of the struct (if length was 3, the last place will be
 % 4) will be the dataset name used (if dataType ~= '')
 % You cannot change it, but you can throw an error if you dont want it!
+% lenght + 2 will contain whether data selection is random (read only)
+% length + 3 will contain whether to put back a selected file after using
+% it.
     out = struct;
 end

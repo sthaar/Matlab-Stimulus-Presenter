@@ -7,7 +7,7 @@ succes = 1;
 missingEvents = {};
 missingDatasets = {};
 corrupt = 0;
-
+doesNotExist = 0;
 
 %% Check
 if ~experimentExists( name )

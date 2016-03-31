@@ -32,12 +32,13 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @DatasetEditor_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
+
 if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
+     gui_State.gui_Callback = str2func(varargin{1});
 end
 
 if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    [varargout{1:nargout}] = gui_mainfcn(gui_State,name,isNew, varargin{:});
 else
     gui_mainfcn(gui_State, varargin{:});
 end
@@ -45,7 +46,7 @@ end
 
 
 % --- Executes just before DatasetEditor is made visible.
-function DatasetEditor_OpeningFcn(hObject, eventdata, handles, varargin)
+function DatasetEditor_OpeningFcn(hObject, eventdata, handles,name,isNew, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -61,14 +62,13 @@ guidata(hObject, handles);
 %% Startup
 %% Input
 try
-    if ~(length(varargin) == 2)
-        error('Invalid usage of DatasetEditor. A name of the dataset must be passed & if the dataset is new:\nDatasetEditor(name, isNew)\nIf the name is '' and isNew = True: A inputdlg is shown to enter the name.');
-    end
-    name = varargin{1};
+%     if ~(length(varargin) == 2)
+%         error('Invalid usage of DatasetEditor. A name of the dataset must be passed & if the dataset is new:\nDatasetEditor(name, isNew)\nIf the name is '' and isNew = True: A inputdlg is shown to enter the name.');
+%     end
+%     name = varargin{1};
     if ~ischar(name)
         error('Name must be a string!');
     end
-    isNew = varargin{2};
     if ~islogical(isNew) && ~isnumeric(isNew)
         error('isNew must be either logical or numeric!');
     end
@@ -125,7 +125,6 @@ try
     datasetInfo = getDataset(handles.myData.databaseName);
     myData.files = datasetInfo.files;
     handles.listbox.String = myData.files;
-    handles.textDatasetName.String = datasetInfo.name;
 catch e
     errordlg(sprintf('Error while updating GUI:\n%s',e.message));
     delete(handles.figure1);
