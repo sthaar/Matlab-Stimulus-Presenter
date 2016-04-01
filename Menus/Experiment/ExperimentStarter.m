@@ -22,7 +22,7 @@ function varargout = ExperimentStarter(varargin)
 
 % Edit the above text to modify the response to help ExperimentStarter
 
-% Last Modified by GUIDE v2.5 04-Jan-2016 12:25:49
+% Last Modified by GUIDE v2.5 31-Mar-2016 18:42:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,10 +57,20 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-
+guiUpdate(handles);
 % UIWAIT makes ExperimentStarter wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+function guiUpdate(handles)
+experiments = getExperiments();
+if handles.listExperiments.Value > length(experiments)
+    if isempty(experiments)
+        handles.listExperiments.Value = 1;
+    else 
+        handles.listExperiments.Value = length(experiments);
+    end
+end
+handles.listExperiments.String = experiments;
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ExperimentStarter_OutputFcn(hObject, eventdata, handles) 
@@ -78,6 +88,90 @@ function StartExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to StartExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.listExperiments.String) 
+    %easter
+    waitfor(msgbox('You must first make an experiment! for now, enjoy the color'));
+    handles.figure1.Color = [1, 0, 1];
+    return
+end
+name = handles.listExperiments.String{handles.listExperiments.Value};
+if ~experimentExists(name)
+    waitfor(errordlg('This experiment is not found!'));
+    return
+end
+[ succes, missingEvents, missingDatasets, corrupt, doesNotExist ] = verifyExperiment( name);
+if ~succes
+    waitfor(errordlg('Experiment failed the validation.\nSee the Command Window for more information.'));
+    missingEvents
+    missingDatasets
+    corrupt
+end
+% Get GUI data
+generatorPackage = struct;
+
+%Set seed
+nummer = int64(handles.editSeed.String);
+if isempty(nummer)
+    waitfor(errordlg('Please enter a seed'));
+    return
+end
+rng(nummer);
+
+try
+    % Experiment generic info/settings
+    generatorPackage.expData = getExperiment(handles.listExperiments.String{handles.listExperiments.Value});
+    generatorPackage.startMessage = handles.editStartMessage.String;
+    generatorPackage.startDelay = str2double(handles.editStartDelay.String);
+    generatorPackage.interTDelay = str2double(handles.editITrialDelay.String);
+    generatorPackage.runMode = handles.runMode.Value;
+    % Experiment specific info/settings
+    expNotes = handles.editNotes.String;
+    subjectId = handles.editSubjectId.String;
+catch e
+    waitfor(errordlg(sprintf('Error: Invalid input\n%s',e.message)));
+    rethrow(e);
+end
+% Generate experiment
+try
+    h = waitbar(0,'Generating experiment...');
+    ExperimentData = generateExperiment(generatorPackage);
+catch e
+    delete(h);
+    waitfor(errordlg(sprintf('Error while generating experiment:\n%s', e.message)));
+    rethrow(e);
+end
+delete(h);
+% Run experiment
+Screen('Preference', 'SkipSyncTests', 1);
+oldLevel = Screen('Preference', 'Verbosity', 0);
+try
+    hW = initWindowBlack(ExperimentData.preMessage);
+catch e
+    EndofExperiment;
+    if strcmp(e.message,'See error message printed above.')
+        try
+            disp('Warning, skipping sync tests!')
+            Screen('Preference', 'SkipSyncTests', 1);
+            hW = initWindowBlack(ExperimentData.preMessage);
+        catch e
+            rethrow(e)
+        end
+    else
+        rethrow(e);
+    end
+end
+try
+    Data = runExperiment(ExperimentData,hW);
+catch e
+    waitfor(errordlg(sprintf('Error while running the experiment! SORRY! More details in the Command Window')));
+    EndofExperiment;
+    rethrow(e)
+end
+EndofExperiment;
+Screen('Preference', 'Verbosity', oldLevel);
+
+
+
 
 
 % --- Executes on selection change in listExperiments.
@@ -88,7 +182,7 @@ function listExperiments_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listExperiments contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listExperiments
-
+guiUpdate(handles);
 
 % --- Executes during object creation, after setting all properties.
 function listExperiments_CreateFcn(hObject, eventdata, handles)
@@ -111,18 +205,163 @@ function ImportExperiment_Callback(hObject, eventdata, handles)
 
 
 
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function editSubjectId_Callback(hObject, eventdata, handles)
+% hObject    handle to editSubjectId (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+% Hints: get(hObject,'String') returns contents of editSubjectId as text
+%        str2double(get(hObject,'String')) returns contents of editSubjectId as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function editSubjectId_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSubjectId (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editNotes_Callback(hObject, eventdata, handles)
+% hObject    handle to editNotes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editNotes as text
+%        str2double(get(hObject,'String')) returns contents of editNotes as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editNotes_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editNotes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editStartMessage_Callback(hObject, eventdata, handles)
+% hObject    handle to editStartMessage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editStartMessage as text
+%        str2double(get(hObject,'String')) returns contents of editStartMessage as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editStartMessage_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editStartMessage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editStartDelay_Callback(hObject, eventdata, handles)
+% hObject    handle to editStartDelay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editStartDelay as text
+%        str2double(get(hObject,'String')) returns contents of editStartDelay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editStartDelay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editStartDelay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editITrialDelay_Callback(hObject, eventdata, handles)
+% hObject    handle to editITrialDelay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editITrialDelay as text
+%        str2double(get(hObject,'String')) returns contents of editITrialDelay as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editITrialDelay_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editITrialDelay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function SubjectID_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SubjectID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on selection change in runMode.
+function runMode_Callback(hObject, eventdata, handles)
+% hObject    handle to runMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns runMode contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from runMode
+
+
+% --- Executes during object creation, after setting all properties.
+function runMode_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to runMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editSeed_Callback(hObject, eventdata, handles)
+% hObject    handle to editSeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSeed as text
+%        str2double(get(hObject,'String')) returns contents of editSeed as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editSeed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSeed (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

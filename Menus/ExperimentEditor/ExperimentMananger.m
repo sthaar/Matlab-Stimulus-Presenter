@@ -22,7 +22,7 @@ function varargout = ExperimentMananger(varargin)
 
 % Edit the above text to modify the response to help ExperimentMananger
 
-% Last Modified by GUIDE v2.5 04-Jan-2016 13:27:51
+% Last Modified by GUIDE v2.5 31-Mar-2016 11:22:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,10 +57,21 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+guiUpdate(handles);
 
 % UIWAIT makes ExperimentMananger wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+function guiUpdate(handles)
+experiments = getExperiments();
+if handles.listbox1.Value > length(experiments)
+    if isempty(experiments)
+        handles.listbox1.Value = 1;
+    else 
+        handles.listbox1.Value = length(experiments);
+    end
+end
+handles.listbox1.String = experiments;
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ExperimentMananger_OutputFcn(hObject, eventdata, handles) 
@@ -81,7 +92,7 @@ function listbox1_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from listbox1
-
+guiUpdate(handles);
 
 % --- Executes during object creation, after setting all properties.
 function listbox1_CreateFcn(hObject, eventdata, handles)
@@ -101,25 +112,57 @@ function newExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to newExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+name = inputdlg('Please give a name for this new experiment');
+if isempty(name)
+    return
+end
+name = name{1};
+if length(name) < 2
+    errordlg('Sorry! Name must be longer than 2 characters!');
+    return
+end
+try
+    createExperiment(name);
+catch e
+    errordlg(sprintf('Error while creating experiment:\n%s',e.message));
+    rethrow(e);
+end
+waitfor(ExperimentEditor(name));
+guiUpdate(handles);
 
 % --- Executes on button press in EditExperiment.
 function EditExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to EditExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if length(handles.listbox1.String) < 1
+    return
+end
+name = handles.listbox1.String{handles.listbox1.Value};
+if ~experimentExists(name)
+    errordlg(sprintf('Error! Experiment %s does not exist...', name));
+end
+waitfor(ExperimentEditor(name));
+guiUpdate(handles);
 
 % --- Executes on button press in DeleteExperiment.
 function DeleteExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to DeleteExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if length(handles.listbox1.String) < 1
+    return
+end
+name = handles.listbox1.String{handles.listbox1.Value};
+if ~experimentExists(name)
+    errordlg(sprintf('Error! Experiment %s does not exist...', name));
+end
+delExperiment(name);
+guiUpdate(handles);
 
-
-% --- Executes on button press in pushbutton4.
-function pushbutton4_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton4 (see GCBO)
+% --- Executes on button press in buttonImport.
+function buttonImport_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonImport (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 

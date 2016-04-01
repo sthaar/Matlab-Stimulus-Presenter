@@ -186,9 +186,11 @@ function out = getEventStruct(data)
 % The following struct names are in use and will be overwritten
 %   - .name => Contains getEventName()
 %   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
 %    PsychPortAudio(''Start'',event.hAudio,1,event.delay,event.waitUntillStart, event.stopAfter);
     event = struct;
-    event.name = data(1).String;
+    event.alias = data(1).String;
     event.id = data(2).Value;
     event.delay = str2double(data(3).String);
     if isnan(event.delay)

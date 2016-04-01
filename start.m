@@ -30,7 +30,7 @@ function varargout = start(varargin)
 
 % Edit the above text to modify the response to help start
 
-% Last Modified by GUIDE v2.5 28-Mar-2016 16:50:54
+% Last Modified by GUIDE v2.5 31-Mar-2016 10:40:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -106,7 +106,7 @@ end
 
 function buttonEdit_Callback(hObject, eventdata, handles)
     set(handles.startMenu,'Visible','off')
-    waitfor(msgbox('Function not yet implemented','Lazy developer','error'));
+    waitfor(ExperimentMananger());
     set(handles.startMenu,'Visible','on')
 end
 
