@@ -140,7 +140,7 @@ if length(handles.listbox1.String) < 1
 end
 name = handles.listbox1.String{handles.listbox1.Value};
 if ~experimentExists(name)
-    errordlg(sptrinf('Error! Experiment %s does not exist...', name));
+    errordlg(sprintf('Error! Experiment %s does not exist...', name));
 end
 waitfor(ExperimentEditor(name));
 guiUpdate(handles);

@@ -169,6 +169,9 @@ function newTrial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 name = inputdlg('Please enter a name for this block...');
+if isempty(name)
+    return
+end
 if length(name{1}) < 2
     waitfor(errordlg('Please enter a name longer than 2'));
     return

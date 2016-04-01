@@ -89,8 +89,6 @@ function out = dataType()
 end
 
 function out = init()
-	global error % global error is read when a example returns false
-	error = 'Example must not be included in a running experiemnt!.';
     out = true; %If out == false, the loading of the experiment will be cancled. 
 end
 

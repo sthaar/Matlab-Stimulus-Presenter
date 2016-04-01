@@ -51,10 +51,14 @@ for i=1:length(creator) %For block in blocks
         end
     end
 end
-% Get the corresponding files for each dataset used
-datasets = containers.Map(datasetNames,datasets);
-% get the iter for non-random data selection without putback
-datasetIters = containers.Map(datasetNames,zeros(1,length(datasetNames)));
+
+if ~isempty(datasets)
+    % Get the corresponding files for each dataset used
+    datasets = containers.Map(datasetNames,datasets);
+    % get the iter for non-random data selection without putback
+    datasetIters = containers.Map(datasetNames,zeros(1,length(datasetNames)));
+end
+
 %% Create events
 % eventStruct.dataset = dataset;
 % eventStruct.randomData = random;
