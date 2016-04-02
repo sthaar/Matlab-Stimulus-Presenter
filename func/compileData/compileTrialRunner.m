@@ -150,7 +150,7 @@ try
                     fprintf(fDesti,loadFun);
                     fprintf(fDesti,'\r\nend\r\n');
                 else
-                    fprintf(fDesti,'%% event %s has no load function. (%s)',name,eventMap(name));
+                    fprintf(fDesti,'%% event %s has no load function. (%s)\n',name,eventMap(name));
                 end
             end
             % ----- run with data -----

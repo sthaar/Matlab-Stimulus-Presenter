@@ -14,6 +14,7 @@ if nargin < 2
     error('Invalid use of runExperiment');
 end
 
+data = {};
 experimentName = ExperimentData.name;
 fprintf('Now starting experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
 
@@ -66,9 +67,9 @@ try
     for repeat=1:nRepeats
         for i=1:nTrials
             dataIterator = dataIterator + 1;
-            trial = trials(i);
-            feedback = runTrial(trial.events,hWindow,runTrialMode);
-            data(dataIterator).feedback = feedback;
+            trial = trials{i};
+            feedback = runTrial(trial,hWindow,runTrialMode);
+            data{dataIterator} = feedback;
             %TODO: matfile('').feedback = feedback (save data, flush to
             %disk)
             WaitSecs(ExperimentData.interTrialDelay);
@@ -83,7 +84,8 @@ catch e
     errordlg(e.message); %give error
     disp(getReport(e));
     rmpath('func');
-    return;
+    rethrow(e);
+    %return;
 end
 %% cleaning
 PsychPortAudio('close');

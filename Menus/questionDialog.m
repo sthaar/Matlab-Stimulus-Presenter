@@ -6,6 +6,14 @@ function h = eventEditor(questionStruct)
 %       struct: Answers to the questions
 %       0:      Cancled
 %       -1:     Shit happend... (invalid input, etc)
+% Returns in global eventEditorFeedback
+%   struct with fields
+%   - String (handles.item.String)
+%   - Value  (handles.item.Value)
+%   - Answer (handles.item.String{handles.item.Value})
+%   Each index represents the question with the same index
+%   Eg.: questionStruct(2) (below) will result in something like this:
+%   answer(2).String = 'What the user put in'
 % Example of a question struct:
 % questionStruct(1).name = 'event Type';
 % questionStruct(1).sort = 'text';

@@ -1,6 +1,8 @@
-function [ runtimeExperiment ] = generateExperiment( generatorPackage )
+function [ runtimeExperiment, eventNames ] = generateExperiment( generatorPackage )
 %GENERATEEXPERIMENT Summary of this function goes here
 %   Detailed explanation goes here
+%% SEttings
+datadir = 'Data';
 %% Unpack
 experiment = generatorPackage.expData;
 runmode = generatorPackage.runMode;
@@ -20,20 +22,27 @@ rte.time = sprintf('%i:%i', c(4), c(5));
 %% Set experiment info
 rte.nRepeats = 1;
 rte.nTrials = 0; %Set it later
-rte.startDelay = 5; %make it variable
-rte.interTrialDelay = 3; %make it variable
+rte.startDelay = startDelay; %make it variable
+rte.interTrialDelay = interTDelay; %make it variable
 rte.runMode = runmode; %1 = preload; 0 = no preload
-rte.preMessage = 'Welcome to the experiment! Press anykey to start'; % variable it must be!
+rte.preMessage = startMessage;%'Welcome to the experiment! Press anykey to start'; % variable it must be!
 
 %% Datasets
 datasetNames = {};
 datasets = {};
 datasetIter = 0;
+eventNamesIter = 0;
+eventNames = {};
 for i=1:length(creator) %For block in blocks
     block = creator{i}; %block struct
     events = block.events; %Êvent cell
     for j=1:length(events)
-        event = events{1};
+        event = events{j};
+        if sum(strcmp(event.name, eventNames)) == 0
+            % Also create a list of event names that are present
+            eventNamesIter = eventNamesIter + 1;
+            eventNames{eventNamesIter} = event.name;
+        end
         if isfield(event,'dataset')
             datasetname = event.dataset;
             if sum(strcmp(datasetname,datasetNames)) == 0
@@ -42,7 +51,7 @@ for i=1:length(creator) %For block in blocks
                 datasetFiles = {};
                 for k=1:length(datasetInfo.files)
                     file = datasetInfo.files{k};
-                    file = fullfile(cd,datasetname,file);%Change to using datasetInfo.fullPath
+                    file = fullfile(cd,datadir,datasetname,file);%Change to using datasetInfo.fullPath
                     datasetFiles{k} = file;
                 end
                 datasets{datasetIter} = datasetFiles;
@@ -72,14 +81,20 @@ for i=1:length(creator) %For block in blocks
     for j=1:length(events)
         event = events{j};
         %Get random data from dataset if random is needed
-        if isfield(event, 'dataset')
+        if isfield(event, 'dataset') && ~isempty(datasets)
             dataset = datasets(event.dataset);
             index = 0;
+            if isempty(dataset)
+                error('Not enough files in the dataset %s', event.dataset);
+            end
             if event.randomData
                 index = randi(length(dataset));
             else % it start at 0, we add one every time.
                 datasetIters(event.dataset) = datasetIters(event.dataset) + 1;
                 index = datasetIters(event.dataset);
+            end
+            if length(dataset) < index
+                error('Not enough files in the dataset %s', event.dataset);
             end
             events{j}.data = dataset{index};
             if ~event.putBack
@@ -91,6 +106,7 @@ for i=1:length(creator) %For block in blocks
     end
     rte.trials{i} = trial;
 end
+rte.nTrials = length(rte.trials);
 runtimeExperiment = rte;
 end
 

@@ -369,5 +369,10 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure
 global experimentlbockeditorreturnvalue
+try
+
 experimentlbockeditorreturnvalue = handles.blockData;
+catch
+    experimentlbockeditorreturnvalue = -1;
+end
 delete(hObject);

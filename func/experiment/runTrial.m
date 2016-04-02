@@ -9,7 +9,7 @@
 %       Things done
 %   end
 %   repeat..
-function [ data ] = runTrial( events, windowPtr, mode )
+function [ replyData ] = runTrial( events, windowPtr, mode )
 % RUNTRIAL Runs the trial according to TrialData and returns Inputdata from
 % the subject (or monkey)
 %   It needs the handle to the window created by initWindowBlack or
@@ -50,36 +50,63 @@ end
 data = {};
 nEvents = length(events); % the amount of events (show image, present sound, delay etc)
 audioHandles = zeros(1,20);
-replyData = struct();
+replyData = cell(1,nEvents);
 
 %% Trial Loops
-
 switch mode
     %% no preload
     case 0
+        startTime = GetSecs();
         for i=1:nEvents
-            eventName = events(i).name;
-% generated script "Example" from example.m
-if strcmp(eventName,'Example')
-event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)
-whatIDo(event.myOwnNameForMyData)
+            event = events{i};
+            reply = struct;
+            reply.name = event.name;
+            eventName = event.name;
+            reply.timeEventStart = GetSecs() - startTime;
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+event.im = imread(event.data);
+Screen('PutImage', windowPtr, event.im);
+Screen('Flip', windowPtr, event.delay, event.clear);
 end
+% generated script "Wait" from wait.m
+if strcmp(eventName,'Wait')
+
+WaitSecs(event.time)
+end
+            replyData{i} = reply;
         end
     %% preload  
     case 1
         for i=1:nEvents % load
-            eventName = events(i).name;
-% generated script "Example" from example.m
-if strcmp(eventName,'Example')
-event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)
+            event = events{i};
+            eventName = event.name;
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+event.im = imread(event.data);
 end
+% event Wait has no load function. (wait)
+            reply.timeEventEnd = GetSecs() - startTime;
+            events{i} = event; % save event data (that is loaded for the run fun)
         end
+        startTime = GetSecs();
         for i=1:nEvents % run
-            eventName = events(i).name;
-% generated script "Example" from example.m
-if strcmp(eventName,'Example')
-whatIDo(event.myOwnNameForMyData)
+            event = events{i};
+            reply = struct;
+            reply.name = event.name;
+            eventName = event.name;
+            reply.timeEventStart = GetSecs() - startTime;
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+Screen('PutImage', windowPtr, event.im);
+Screen('Flip', windowPtr, event.delay, event.clear);
 end
+% generated script "Wait" from wait.m
+if strcmp(eventName,'Wait')
+WaitSecs(event.time)
+end
+            reply.timeEventEnd = GetSecs() - startTime;
+            replyData{i} = reply;
         end
     otherwise
         error('Unknown trial run mode')

@@ -22,7 +22,6 @@ switch n
         Message = 'Welcome to this experiment!';
         hideCursor = true;
 end
-
 screens = Screen('Screens');
 %Get the screen we want
 %If external exists, we want the primary screen. For reasons
@@ -53,7 +52,7 @@ DrawFormattedText(handle,'You can quit this experiment at any time using shift +
 %flip the screen (to show the text)
 Screen('Flip',handle);
 
-KbPressWait(-1);
+KbWait(-1);
 Screen('Flip',handle);
 end
 

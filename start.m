@@ -74,6 +74,10 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     oldpath = path;
     addpath(genpath('func'));
     addpath(genpath('Menus'));
+    
+    %% Check data & experiment path
+    mkdir('Data');
+    mkdir('Experiments');
     %% PsychToolbox
     %It needs to be installed so... Lets check it!
     checkPsychtoolbox;

@@ -27,11 +27,11 @@ function varargout = ExperimentStarter(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @ExperimentStarter_OpeningFcn, ...
-                   'gui_OutputFcn',  @ExperimentStarter_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @ExperimentStarter_OpeningFcn, ...
+    'gui_OutputFcn',  @ExperimentStarter_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -66,14 +66,14 @@ experiments = getExperiments();
 if handles.listExperiments.Value > length(experiments)
     if isempty(experiments)
         handles.listExperiments.Value = 1;
-    else 
+    else
         handles.listExperiments.Value = length(experiments);
     end
 end
 handles.listExperiments.String = experiments;
 
 % --- Outputs from this function are returned to the command line.
-function varargout = ExperimentStarter_OutputFcn(hObject, eventdata, handles) 
+function varargout = ExperimentStarter_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -88,7 +88,7 @@ function StartExperiment_Callback(hObject, eventdata, handles)
 % hObject    handle to StartExperiment (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(handles.listExperiments.String) 
+if isempty(handles.listExperiments.String)
     %easter
     waitfor(msgbox('You must first make an experiment! for now, enjoy the color'));
     handles.figure1.Color = [1, 0, 1];
@@ -123,7 +123,7 @@ try
     generatorPackage.startMessage = handles.editStartMessage.String;
     generatorPackage.startDelay = str2double(handles.editStartDelay.String);
     generatorPackage.interTDelay = str2double(handles.editITrialDelay.String);
-    generatorPackage.runMode = handles.runMode.Value;
+    generatorPackage.runMode = handles.runMode.Value - 1;
     % Experiment specific info/settings
     expNotes = handles.editNotes.String;
     subjectId = handles.editSubjectId.String;
@@ -134,7 +134,8 @@ end
 % Generate experiment
 try
     h = waitbar(0,'Generating experiment...');
-    ExperimentData = generateExperiment(generatorPackage);
+    [ExperimentData eventNames] = generateExperiment(generatorPackage);
+    compileTrialRunner(eventNames);
 catch e
     delete(h);
     waitfor(errordlg(sprintf('Error while generating experiment:\n%s', e.message)));
@@ -167,11 +168,27 @@ catch e
     EndofExperiment;
     rethrow(e)
 end
-EndofExperiment;
+EndofExperiment(hW,'You have reached the end! Thanks you for participating!');
 Screen('Preference', 'Verbosity', oldLevel);
 
-
-
+%% Process and save data
+data = struct;
+dataiter = 0;
+for i=1:length(Data)
+    for j=1:length(Data{i})
+        dataiter = dataiter + 1;
+        eventdata = Data{i}{j};
+        fnames = fieldnames(eventdata);
+        for k=1:length(fnames)
+            eval(sprintf('data(dataiter).%s = eventdata.%s',fnames{k}, fnames{k}));            
+        end
+        data(dataiter).subjectId = subjectId;
+    end
+    dataiter = dataiter + 1;
+    data(dataiter).name = sprintf('Block %i',i);
+end
+exportStructToCSV(data,['Results_' name '.csv'],1);
+msgbox(sprintf('Results saved (and appended) to: %s', fullfile(cd,['Results_' name '.csv'])));
 
 
 % --- Executes on selection change in listExperiments.
