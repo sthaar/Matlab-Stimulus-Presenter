@@ -1,3 +1,17 @@
+%     Copyright (C) 2016  Erwin Diepgrond
+% 
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+% 
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+% 
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function [ data ] = runExperiment( ExperimentData, hWindow )
 %RUNEXPERIMENT Well... It needs data to do the experiment, like stimuli. It
 %needs a handle to a window... And it returns the input data that was
@@ -14,6 +28,7 @@ if nargin < 2
     error('Invalid use of runExperiment');
 end
 
+data = {};
 experimentName = ExperimentData.name;
 fprintf('Now starting experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
 
@@ -66,9 +81,9 @@ try
     for repeat=1:nRepeats
         for i=1:nTrials
             dataIterator = dataIterator + 1;
-            trial = trials(i);
-            feedback = runTrial(trial.events,hWindow,runTrialMode);
-            data(dataIterator).feedback = feedback;
+            trial = trials{i};
+            feedback = runTrial(trial,hWindow,runTrialMode);
+            data{dataIterator} = feedback;
             %TODO: matfile('').feedback = feedback (save data, flush to
             %disk)
             WaitSecs(ExperimentData.interTrialDelay);
@@ -83,7 +98,8 @@ catch e
     errordlg(e.message); %give error
     disp(getReport(e));
     rmpath('func');
-    return;
+    rethrow(e);
+    %return;
 end
 %% cleaning
 PsychPortAudio('close');

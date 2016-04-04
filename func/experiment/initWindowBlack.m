@@ -1,3 +1,17 @@
+%     Copyright (C) 2016  Erwin Diepgrond
+% 
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+% 
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+% 
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function [ handle ] = initWindowBlack(Message,priority,hideCursor )
 %initWindowBlack Create the window and returns it handle
 % initWindowBlack([Message][,priority = 2][,hideCursor = 1])
@@ -22,7 +36,6 @@ switch n
         Message = 'Welcome to this experiment!';
         hideCursor = true;
 end
-
 screens = Screen('Screens');
 %Get the screen we want
 %If external exists, we want the primary screen. For reasons
@@ -53,7 +66,7 @@ DrawFormattedText(handle,'You can quit this experiment at any time using shift +
 %flip the screen (to show the text)
 Screen('Flip',handle);
 
-KbPressWait(-1);
+KbWait(-1);
 Screen('Flip',handle);
 end
 

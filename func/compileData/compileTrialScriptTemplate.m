@@ -1,3 +1,17 @@
+%     Copyright (C) 2016  Erwin Diepgrond
+% 
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+% 
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+% 
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % 0Template note:
 %   \\ means insert
 % things you can insert:
@@ -9,7 +23,7 @@
 %       Things done
 %   end
 %   repeat..
-function [ data ] = runTrial( events, windowPtr, mode )
+function [ replyData ] = runTrial( events, windowPtr, mode )
 % RUNTRIAL Runs the trial according to TrialData and returns Inputdata from
 % the subject (or monkey)
 %   It needs the handle to the window created by initWindowBlack or
@@ -50,33 +64,41 @@ end
 data = {};
 nEvents = length(events); % the amount of events (show image, present sound, delay etc)
 audioHandles = zeros(1,20);
-replyData = struct();
+replyData = cell(1,nEvents);
 
 %% Trial Loops
-
 switch mode
     %% no preload
     case 0
+        startTime = GetSecs();
         for i=1:nEvents
-            reply = replyData(i);
             event = events{i};
+            reply = struct;
+            reply.name = event.name;
             eventName = event.name;
+            reply.timeEventStart = GetSecs() - startTime;
             \\runload
+            replyData{i} = reply;
         end
     %% preload  
     case 1
         for i=1:nEvents % load
-            reply = replyData(i);
             event = events{i};
             eventName = event.name;
             \\load
+            reply.timeEventEnd = GetSecs() - startTime;
             events{i} = event; % save event data (that is loaded for the run fun)
         end
+        startTime = GetSecs();
         for i=1:nEvents % run
-            reply = replyData(i);
             event = events{i};
+            reply = struct;
+            reply.name = event.name;
             eventName = event.name;
+            reply.timeEventStart = GetSecs() - startTime;
             \\run
+            reply.timeEventEnd = GetSecs() - startTime;
+            replyData{i} = reply;
         end
     otherwise
         error('Unknown trial run mode')

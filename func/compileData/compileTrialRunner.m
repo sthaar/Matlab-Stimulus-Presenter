@@ -1,3 +1,17 @@
+%     Copyright (C) 2016  Erwin Diepgrond
+% 
+%     This program is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+% 
+%     This program is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+% 
+%     You should have received a copy of the GNU General Public License
+%     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 function [ boolSucces ] = compileTrialRunner( varargin )
 %% compileTrialRunner( events, template, desti )
 %   compileTrialRunner compiles all the working events into a script
@@ -150,7 +164,7 @@ try
                     fprintf(fDesti,loadFun);
                     fprintf(fDesti,'\r\nend\r\n');
                 else
-                    fprintf(fDesti,'%% event %s has no load function. (%s)',name,eventMap(name));
+                    fprintf(fDesti,'%% event %s has no load function. (%s)\n',name,eventMap(name));
                 end
             end
             % ----- run with data -----

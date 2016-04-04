@@ -13,6 +13,7 @@ function res = gateway(varargin)
 %     getQuestStruct: should return a eventEditor compatible struct. if 0, no questions asked. Empty struct will be passed to getEventStruct
 %     getEventStruct: given the resulting questStruct (named answerStruct), create a eventStruct you can use.
 %     getName:        should return the name of this event.
+%     getDescription: Should return the description for the end user
 % notes:
 %   the structure containing your data (made in getEventStruct) is always
 %   named 'event'. Make sure you use that in getLoadFun and getRunFun.
@@ -71,22 +72,27 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Show Image';
+    out = 'Wait'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Shows an image based upon the settings';
+    out = 'Waits for x seconds';
 end
 
 function out = dataType()
-    out = 'image';  % I need images (paths to)
+    out = '';       % No data required (you may set static data using the questStruct or load)
+
 end
 
 function out = init()
-	%global error % global error is read when a example returns false
-	%error = 'Example must not be included in a running experiemnt!.';
+    try 
+        WaitSecs(0.1);
+    catch
+        warning('WaitSecs not working. Function not included');
+        out = false;
+        return
+    end
     out = true; %If out == false, the loading of the experiment will be cancled. 
-    % No init needed
 end
 
 function out = enabled()
@@ -100,8 +106,9 @@ function out = getLoadFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'event.im = imread(event.data);'; %may be multiline!
+% if out == '', no load function will be written.
+% Any change to event will be saved for the runFunction
+    out = ''; %may be multiline!
 end
 
 function out = getRunFunction()
@@ -111,7 +118,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'Screen(''PutImage'', windowPtr, event.im);\r\nScreen(''Flip'', windowPtr, event.delay, event.clear);';
+    out = 'WaitSecs(event.time)';
 end
 
 function out = getQuestStruct()
@@ -122,44 +129,33 @@ function out = getQuestStruct()
 % questionStruct(2).name = 'Random';
 % questionStruct(2).sort = 'popup';
 % questionStruct(2).data = { 'Yes' ; 'No' };
-%
-% Data is always a string and is always displayed
-%
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
+% If out == 0: No question dialog will popup and no questions are asked.
+% getEventStruct will be called regardless.
     q = struct;
-    q(1).name = 'event Name';
+    q(1).name = 'Wait time (secs)';
     q(1).sort = 'edit';
-    q(1).data = 'Draw Image';
-    
-    q(2).name = 'delay';
-    q(2).sort = 'edit';
-    q(2).data = '0';
-    q(2).toolTip = 'x seconds before the images gets shown';
-    
-    q(3).name = 'Behaviors';
-    q(3).sort = 'text';
-    q(3).data = 'Select options:';
-    
-    q(4).name = '';
-    q(4).sort = 'checkbox';
-    q(4).data = 'clear screen';
-    q(4).toolTip = 'If checked: Clears the screen and then shows the image';
+    q(1).data = '0';
+    q(1).toolTip = 'Can be 0.1 as well!';
     out = q; %See eventEditor
 end
 
-function out = getEventStruct(answersOfQuestions)
-% event.data will be filled with the needed files specified in dataType()
+function out = getEventStruct(data)
+% This function MUST return a struct.
+% The following struct names are in use and will be overwritten
+%   - .name => Contains getEventName()
+%   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
+% IN the last place of the struct (if length was 3, the last place will be
+% 4) will be the dataset name used (if dataType ~= '')
+% You cannot change it, but you can throw an error if you dont want it!
+% lenght + 2 will contain whether data selection is random (read only)
+% length + 3 will contain whether to put back a selected file after using
+% it.
     event = struct;
-    event.alias = answersOfQuestions(1).String;
-    %Delay
-    event.delay = str2double( answersOfQuestions(2).answer ) ;
-    if isnan(event.delay)
-       event.delay = 0; 
-    end
-    %Clear screen
-    event.clear = answersOfQuestions(4).Value;
-    
-    out = event; %No other data needed
+    event.time = str2num(data(1).String);
+    out = event;
 end
