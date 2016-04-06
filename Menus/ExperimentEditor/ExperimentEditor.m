@@ -36,7 +36,7 @@ function varargout = ExperimentEditor(varargin)
 
 % Edit the above text to modify the response to help ExperimentEditor
 
-% Last Modified by GUIDE v2.5 30-Mar-2016 17:47:23
+% Last Modified by GUIDE v2.5 06-Apr-2016 08:14:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -265,10 +265,17 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 try
     updateExperiment(handles.experiment.name, handles.experiment);
 catch e
-    global experiment
-    experiment = handles.experiment;
-    experi = handles.experiment;
-    file = [handles.experiment.name '.mat'];
+    try
+        global experiment
+        experiment = handles.experiment;
+        experi = handles.experiment;
+        file = [handles.experiment.name '.mat'];
+        
+    catch e
+        warning('Invalid GUI initialization\n%s',e.message);
+        delete(hObject);
+        return
+    end
     save(file, 'experi');
     waitfor(errordlg(sprintf('Oops! Something went wrong while saving!\nWe saved a copy in your current directory (%s)\n%s',...
         file, 'Also we saved it in global experiment, type global experiment to get it in matlab')));
@@ -369,3 +376,44 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+delete(hObject);
+
+
+% --- Executes on button press in buttonDuplicate.
+function buttonDuplicate_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonDuplicate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+experi = handles.experiment;
+sel = experi.creator{handles.blockList.Value};
+experi.creator = [experi.creator {sel}];
+handles.experiment = experi;
+guidata(handles.figure1, handles);
+guiUpdate(handles);
+
+
+% --- Executes on button press in buttonRename.
+function buttonRename_Callback(hObject, eventdata, handles)
+% hObject    handle to buttonRename (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.blockList.String)
+    return
+end
+experi = handles.experiment;
+newName = inputdlg(sprintf('Please give a new name for this block: %s',experi.creator{handles.blockList.Value}.name));
+if isempty(newName)
+    return
+end
+if length(newName{1}) < 3
+    errordlg('Name too short!');
+    return
+end
+ experi.creator{handles.blockList.Value}.name = newName{1};
+ handles.experiment = experi;
+ guidata(handles.figure1, handles);
+ guiUpdate(handles);
+ 
