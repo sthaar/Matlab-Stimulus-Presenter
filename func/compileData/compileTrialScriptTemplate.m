@@ -78,6 +78,7 @@ switch mode
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
             \\runload
+            reply.timeEventEnd = GetSecs() - startTime;
             replyData{i} = reply;
         end
     %% preload  
@@ -86,7 +87,6 @@ switch mode
             event = events{i};
             eventName = event.name;
             \\load
-            reply.timeEventEnd = GetSecs() - startTime;
             events{i} = event; % save event data (that is loaded for the run fun)
         end
         startTime = GetSecs();
