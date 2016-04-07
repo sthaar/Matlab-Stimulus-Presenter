@@ -189,6 +189,7 @@ Screen('Preference', 'Verbosity', oldLevel);
 data = struct;
 dataiter = 0;
 for i=1:length(Data)
+    blocknr = sprintf('Block %i',i);
     for j=1:length(Data{i})
         dataiter = dataiter + 1;
         eventdata = Data{i}{j};
@@ -196,10 +197,10 @@ for i=1:length(Data)
         for k=1:length(fnames)
             eval(sprintf('data(dataiter).%s = eventdata.%s',fnames{k}, fnames{k}));            
         end
+		% Add extra collums
         data(dataiter).subjectId = subjectId;
+		data(dataiter).blocknr = blocknr;
     end
-    dataiter = dataiter + 1;
-    data(dataiter).name = sprintf('Block %i',i);
 end
 exportStructToCSV(data,['Results_' name '.csv'],1);
 msgbox(sprintf('Results saved (and appended) to: %s', fullfile(cd,['Results_' name '.csv'])));

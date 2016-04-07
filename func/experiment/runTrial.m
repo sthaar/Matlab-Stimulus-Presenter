@@ -83,11 +83,7 @@ event.im = imread(event.data);
 Screen('PutImage', windowPtr, event.im);
 Screen('Flip', windowPtr, event.delay, event.clear);
 end
-% generated script "Wait" from wait.m
-if strcmp(eventName,'Wait')
-
-WaitSecs(event.time)
-end
+            reply.timeEventEnd = GetSecs() - startTime;
             replyData{i} = reply;
         end
     %% preload  
@@ -99,8 +95,6 @@ end
 if strcmp(eventName,'Show Image')
 event.im = imread(event.data);
 end
-% event Wait has no load function. (wait)
-            reply.timeEventEnd = GetSecs() - startTime;
             events{i} = event; % save event data (that is loaded for the run fun)
         end
         startTime = GetSecs();
@@ -114,10 +108,6 @@ end
 if strcmp(eventName,'Show Image')
 Screen('PutImage', windowPtr, event.im);
 Screen('Flip', windowPtr, event.delay, event.clear);
-end
-% generated script "Wait" from wait.m
-if strcmp(eventName,'Wait')
-WaitSecs(event.time)
 end
             reply.timeEventEnd = GetSecs() - startTime;
             replyData{i} = reply;
