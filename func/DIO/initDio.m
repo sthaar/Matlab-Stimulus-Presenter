@@ -39,10 +39,12 @@ for i=1:length(configDirs)
     for file=files
         try
             [devname channels ] = parseConfig(fullfile(cdir,file.name));
-            iter = iter + 1;
-            DioDevices(iter).name = devname;
-            DioDevices(iter).channels = channels;
-            fprintf('Found config for %s\n', devname);
+            if ~empty(devname)
+                iter = iter + 1;
+                DioDevices(iter).name = devname;
+                DioDevices(iter).channels = channels;
+                fprintf('Found config for %s\n', devname);
+            end
         catch e
             warning('Invalid DIO config: %s',file.name);
         end

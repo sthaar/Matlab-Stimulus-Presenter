@@ -161,9 +161,9 @@ for i=1:length(handles)
     answers(i).String = handles(i).quest.String;
     answers(i).Value = handles(i).quest.Value;
     if iscell(answers(i).String)
-        answers(i).answer = answers(i).String{answers(i).Value};
+        answers(i).Answer = answers(i).String{answers(i).Value};
     else
-        answers(i).answer = answers(i).String;
+        answers(i).Answer = answers(i).String;
     end
 end
 

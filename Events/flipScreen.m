@@ -138,7 +138,7 @@ end
 function out = getEventStruct(answersOfQuestions)
     event = struct;
     %Delay
-    event.delay = str2double( answersOfQuestions(1).answer ) ;
+    event.delay = str2double( answersOfQuestions(1).Answer ) ;
     if isnan(event.delay)
        event.delay = 0; 
     end

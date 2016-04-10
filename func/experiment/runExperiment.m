@@ -104,6 +104,6 @@ end
 %% cleaning
 PsychPortAudio('close');
 fprintf('End of experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
-rmpath('func');
+%rmpath('func');
 end
 

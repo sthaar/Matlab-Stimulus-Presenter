@@ -18,7 +18,7 @@ function exportStructToCSV( data, filename, append )
 %   E-mail: e.j.diepgrond@gmail.com
 %   decimal seperator is .
 %% settings
-delimiter = ';'
+delimiter = ';';
 
 %% Check input
 if ~isstruct(data)

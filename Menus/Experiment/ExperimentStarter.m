@@ -150,6 +150,7 @@ try
     h = waitbar(0,'Generating experiment...');
     [ExperimentData eventNames] = generateExperiment(generatorPackage);
     compileTrialRunner(eventNames);
+    initEvents(eventNames);
 catch e
     delete(h);
     waitfor(errordlg(sprintf('Error while generating experiment:\n%s', e.message)));
@@ -195,7 +196,7 @@ for i=1:length(Data)
         eventdata = Data{i}{j};
         fnames = fieldnames(eventdata);
         for k=1:length(fnames)
-            eval(sprintf('data(dataiter).%s = eventdata.%s',fnames{k}, fnames{k}));            
+            eval(sprintf('data(dataiter).%s = eventdata.%s;',fnames{k}, fnames{k}));            
         end
 		% Add extra collums
         data(dataiter).subjectId = subjectId;

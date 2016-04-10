@@ -154,7 +154,7 @@ function out = getEventStruct(answersOfQuestions)
     event = struct;
     event.alias = answersOfQuestions(1).String;
     %Delay
-    event.delay = str2double( answersOfQuestions(2).answer ) ;
+    event.delay = str2double( answersOfQuestions(2).Answer ) ;
     if isnan(event.delay)
        event.delay = 0; 
     end

@@ -72,27 +72,19 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Wait'; % The displayed event name
+    out = 'DIO event'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Waits for x seconds';
+    out = 'Changes the state of the selected channel';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
-
 end
 
 function out = init()
-    try 
-        WaitSecs(0.1);
-    catch
-        warning('WaitSecs not working. Function not included');
-        out = false;
-        return
-    end
-    out = true; %If out == false, the loading of the experiment will be cancled. 
+    out = (initDio()==1); %If out == false, the loading of the experiment will be cancled. 
 end
 
 function out = enabled()
@@ -108,7 +100,12 @@ function out = getLoadFunction()
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
 % Any change to event will be saved for the runFunction
-    out = ''; %may be multiline!
+    out = [ 'global diosessions;\r\n' ...
+            'event.s = diosessions(event.devname);\r\n' ...
+            'event.s.outState(event.ch) = event.value;\r\n' ...
+            'diosessions(event.devname) = event.s;' ...
+          ];
+ %may be multiline!
 end
 
 function out = getRunFunction()
@@ -118,7 +115,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'WaitSecs(event.time);';
+    out = ['event.s.session.outputSingleScan(event.s.outState);'];
 end
 
 function out = getQuestStruct()
@@ -134,12 +131,28 @@ function out = getQuestStruct()
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
-    q = struct;
-    q(1).name = 'Wait time (secs)';
-    q(1).sort = 'edit';
-    q(1).data = '0';
-    q(1).toolTip = 'Can be 0.1 as well!';
-    out = q; %See eventEditor
+    DioDevices = getConfigDevs();
+    channels = {};
+    for i=1:length(DioDevices(1).channels)
+        ch = DioDevices(1).channels{i};
+        channels = [channels {ch.name}];
+    end
+    
+    out = struct; %See eventEditor
+    out(1).name = 'Device:';
+    out(1).sort = 'popupmenu';
+    out(1).data = DioDevices(1).name;
+    out(1).toolTip = 'Select one of the supported devices';
+    
+    out(2).name = 'Channel:';
+    out(2).sort = 'popupmenu';
+    out(2).data = channels;
+    out(2).toolTip = 'Select the channel for which the value shall be changed';
+    
+    out(3).name = 'Value:';
+    out(3).sort = 'popupmenu';
+    out(3).data = {'0', '1'};
+    out(3).toolTip = 'Select the output value (0=low, 1=high)';
 end
 
 function out = getEventStruct(data)
@@ -156,6 +169,25 @@ function out = getEventStruct(data)
 % length + 3 will contain whether to put back a selected file after using
 % it.
     event = struct;
-    event.time = str2num(data(1).String);
+    
+    DioDevices = getConfigDevs();
+    dio = DioDevices(data(1).Value); %GEt selected dio device
+    
+    chs = dio.channels;
+    ch = data(2).Answer;
+    nOut = 0;
+    
+    for i=1:length(chs)
+        if ~strcmp(DioDevices(1).channels{i}.direction,'InputOnly')
+            nOut = nOut + 1;
+        end
+        if strcmp(DioDevices(1).channels{i}.name, ch)
+            event.ch = nOut;
+            break;
+        end
+    end
+    event.devname = data(1).Answer;
+    event.value = data(3).Value - 1;
+
     out = event;
 end
