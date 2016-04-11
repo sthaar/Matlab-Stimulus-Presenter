@@ -111,7 +111,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'Screen(''PutImage'', windowPtr, event.im);\r\nScreen(''Flip'', windowPtr, event.delay, event.clear);';
+    out = 'Screen(''PutImage'', windowPtr, event.im);\r\nScreen(''Flip'', windowPtr, event.delay, double(~event.clear));\r\nreply.data = event.data;';
 end
 
 function out = getQuestStruct()

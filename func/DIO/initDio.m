@@ -39,7 +39,7 @@ for i=1:length(configDirs)
     for file=files
         try
             [devname channels ] = parseConfig(fullfile(cdir,file.name));
-            if ~empty(devname)
+            if ~isempty(devname)
                 iter = iter + 1;
                 DioDevices(iter).name = devname;
                 DioDevices(iter).channels = channels;

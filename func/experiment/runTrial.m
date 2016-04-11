@@ -1,15 +1,15 @@
 %     Copyright (C) 2016  Erwin Diepgrond
-%
+% 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
 %     the Free Software Foundation, either version 3 of the License, or
 %     (at your option) any later version.
-%
+% 
 %     This program is distributed in the hope that it will be useful,
 %     but WITHOUT ANY WARRANTY; without even the implied warranty of
 %     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 %     GNU General Public License for more details.
-%
+% 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 % 0Template note:
@@ -49,7 +49,7 @@ function [ replyData ] = runTrial( events, windowPtr, mode )
 % This mode can be used when the stimuli are movies (30sec+), when the interval
 % between stimuli and timing of the reaction is of no importance.
 % Do not use when you want things like (image - 2ms - image) or (image -
-% 0ms - sound). It just wont do.
+% 0ms - sound). It just wont do. 
 %% Argument checks and presets
 switch(nargin)
     case 2
@@ -63,73 +63,83 @@ end
 %% initialisation
 data = {};
 nEvents = length(events); % the amount of events (show image, present sound, delay etc)
-audioHandles = zeros(1,20);
+audioHandles = zeros(1,40);
 replyData = cell(1,nEvents);
 
 %% Trial Loops
 switch mode
     %% no preload
     case 0
+        replyIter = 1;
+        eventIter = 1;
         startTime = GetSecs();
-        for i=1:nEvents
-            event = events{i};
+        while eventIter <= nEvents
+            % Craete data
+            event = events{eventIter};
             reply = struct;
             reply.name = event.name;
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
-            % generated script "DIO event" from DIO_event.m
-            if strcmp(eventName,'DIO event')
-                global diosessions;
-                event.s = diosessions(event.devname);
-                event.s.outState(event.ch) = event.value;
-                diosessions(event.devname) = event.s;
-                event.s.session.outputSingleScan(event.s.outState);
-            end
-            % generated script "Wait" from wait.m
-            if strcmp(eventName,'Wait')
-                
-                WaitSecs(event.time)
-            end
+            % Run event
+% generated script "Ask" from askFeedback.m
+if strcmp(eventName,'Ask')
+[width, height]=Screen('WindowSize', windowPtr);event.width = width; event.height=height;
+reply.data = Ask(windowPtr, event.quest, event.textcolor,event.bgcolor,event.mode, 'center', 'center');
+
+end
+            % Save
             reply.timeEventEnd = GetSecs() - startTime;
-            replyData{i} = reply;
+            reply.blockname = event.blockname;
+            replyData{replyIter} = reply;
+            % Iter
+            replyIter = replyIter + 1;
+            eventIter = eventIter + 1;
         end
-        %% preload
+    %% preload  
     case 1
         for i=1:nEvents % load
             event = events{i};
             eventName = event.name;
-            % generated script "DIO event" from DIO_event.m
-            if strcmp(eventName,'DIO event')
-                global diosessions;
-                event.s = diosessions(event.devname);
-                event.s.outState(event.ch) = event.value;
-                diosessions(event.devname) = event.s;
-            end
-            % event Wait has no load function. (wait)
+% generated script "Ask" from askFeedback.m
+if strcmp(eventName,'Ask')
+[width, height]=Screen('WindowSize', windowPtr);event.width = width; event.height=height;
+end
             events{i} = event; % save event data (that is loaded for the run fun)
         end
+        replyIter = 1;
+        eventIter = 1;
         startTime = GetSecs();
-        for i=1:nEvents % run
-            event = events{i};
+        while eventIter <= nEvents % run
+            event = events{eventIter};
+            % Create data
             reply = struct;
             reply.name = event.name;
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
-            % generated script "DIO event" from DIO_event.m
-            if strcmp(eventName,'DIO event')
-                event.s.session.outputSingleScan(event.s.outState);
-            end
-            % generated script "Wait" from wait.m
-            if strcmp(eventName,'Wait')
-                WaitSecs(event.time)
-            end
+            % Run event
+% generated script "Ask" from askFeedback.m
+if strcmp(eventName,'Ask')
+reply.data = Ask(windowPtr, event.quest, event.textcolor,event.bgcolor,event.mode, 'center', 'center');
+
+end
+            % Save data
             reply.timeEventEnd = GetSecs() - startTime;
-            replyData{i} = reply;
+            reply.blockname = event.blockname;
+            replyData{replyIter} = reply;
+            % Iters
+            replyIter = replyIter + 1;
+            eventIter = eventIter + 1;
         end
     otherwise
         error('Unknown trial run mode')
 end
 
+%% Clean audio handles
+for i=1:length(audioHandles)
+    if ~(audioHandles(i)==0)
+        PsychPortAudio('Close' , audioHandles(i));
+    end
+end
 
 %% finish data compile
 % nothing to do here

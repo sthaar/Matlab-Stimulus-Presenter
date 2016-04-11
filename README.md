@@ -30,6 +30,10 @@ Various todos:
 -block repeats
 -variable inter trial delay
 
+-Non linear events
+
+-New block editor design with integrated questionDialog
+
 -experimentEditor: Rename block option
 
 -Change event structure to cell (core engine)

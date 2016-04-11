@@ -93,16 +93,16 @@ try
 catch e 
     ShowCursor; %Show cursor
     sca; %Close screen
-    PsychPortAudio('close'); %stop any damn audio
+    PsychPortAudio('close'); %close all sounds and shutdown sound driver
     fprintf('Aborted experiment "%s" at %s.\n',experimentName,datestr(datetime,'HH:MM:SS'));
     errordlg(e.message); %give error
     disp(getReport(e));
-    rmpath('func');
+%    rmpath('func');
     rethrow(e);
     %return;
 end
 %% cleaning
-PsychPortAudio('close');
+PsychPortAudio('close'); %close all sounds and shutdown sound driver
 fprintf('End of experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
 %rmpath('func');
 end
