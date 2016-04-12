@@ -118,7 +118,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'WaitSecs(event.time);';
+    out = 'WaitSecs(event.time);\r\nreply.waittime = event.time;';
 end
 
 function out = getQuestStruct()
