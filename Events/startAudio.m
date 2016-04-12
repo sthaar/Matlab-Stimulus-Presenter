@@ -119,7 +119,8 @@ function out = getLoadFunction()
 %     'audioHandles(event.id) = hAudio; % creates a local variable for the next audio related function\r\n' ...
 %     'event.hAudio = hAudio;\r\nclear aData Fs'];
     out = ['[aData, Fs] = audioread(event.data);\r\n'...
-           'event.hAudio = AudioPlayer(aData,Fs);'];
+           'aData = aData(1:int32(event.stofAfter*Fs));\r\n'...
+           'event.hAudio = audioPlayer(aData,Fs);\r\n'];
 end
 
 function out = getRunFunction()
@@ -161,26 +162,26 @@ function out = getQuestStruct()
                  21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40};
     q(2).toolTip = 'The id is needed to stop (or start or resume or what ever) this specific sound in other events';
     
-    q(3).name = 'delay';
-    q(3).sort = 'edit';
-    q(3).data = '0';
-    q(3).toolTip = 'Delay the start of the sound';
+%     q(3).name = 'delay';
+%     q(3).sort = 'edit';
+%     q(3).data = '0';
+%     q(3).toolTip = 'Delay the start of the sound';
     
-    q(4).name = '';
-    q(4).sort = 'checkbox';
-    q(4).data = 'wait for the sound to start';
-    q(4).toolTip = '''Freezes'' the program untill the sounds starts playing';
+    q(3).name = '';
+    q(3).sort = 'checkbox';
+    q(3).data = 'wait for the sound to start';
+    q(3).toolTip = '''Freezes'' the program untill the sounds starts playing';
     
-    q(5).name = 'Stop sound after';
-    q(5).sort = 'edit';
-    q(5).data = 'inf';
-    q(5).toolTip = 'Stops playing sound after x seconds';
+    q(4).name = 'Stop sound after';
+    q(4).sort = 'edit';
+    q(4).data = 'inf';
+    q(4).toolTip = 'Stops playing sound after x seconds';
     
-    q(6).name = 'Repeat times';
-    q(6).sort = 'edit';
-    q(6).data = '1';
-    q(6).toolTip = 'Repeats x times, where x == 1 is play once. x may be smaller than 1 to play for example 50% (x==0.5)';
-    
+%     q(5).name = 'Repeat times';
+%     q(5).sort = 'edit';
+%     q(5).data = '1';
+%     q(5).toolTip = 'Repeats x times, where x == 1 is play once. x may be smaller than 1 to play for example 50% (x==0.5)';
+ 
     
     out = q; %See eventEditor
 end
@@ -196,18 +197,18 @@ function out = getEventStruct(data)
     event = struct;
     event.alias = data(1).String;
     event.id = data(2).Value;
-    event.delay = str2double(data(3).String);
-    if isnan(event.delay)
-        event.delay = 0;
-    end
-    event.waitUntillStart = data(4).Value;
-    event.stopAfter = str2double(data(5).String);
+%     event.delay = str2double(data(3).String);
+%     if isnan(event.delay)
+%         event.delay = 0;
+%     end
+    event.waitUntillStart = data(3).Value;
+    event.stopAfter = str2double(data(4).String);
     if isnan(event.stopAfter)
         event.stofAfter = Inf;
     end
-    event.rep = str2double(data(6).String);
-    if isnan(event.rep)
-        event.rep = 1;
-    end
+%     event.rep = str2double(data(6).String);
+%     if isnan(event.rep)
+%         event.rep = 1;
+%     end
     out = event;
 end
