@@ -113,6 +113,9 @@ switch mode
             % Save data
             reply.timeEventEnd = GetSecs() - startTime;
             reply.blockname = event.blockname;
+            if isfield(event, 'alias')
+                reply.alias = event.alias;
+            end
             replyData{replyIter} = reply;
             % Iters
             replyIter = replyIter + 1;

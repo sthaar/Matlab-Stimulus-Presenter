@@ -172,9 +172,9 @@ function out = getEventStruct(data)
     
     DioDevices = getConfigDevs();
     dio = DioDevices(data(1).Value); %GEt selected dio device
-    
     chs = dio.channels;
     ch = data(2).Answer;
+    event.alias = ch;
     nOut = 0;
     
     for i=1:length(chs)

@@ -72,26 +72,18 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Wait'; % The displayed event name
+    out = 'Load sound dataset'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Waits for x seconds';
+    out = 'Loads All sounds from a dataset for imediate playback';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
-
 end
 
 function out = init()
-    try 
-        WaitSecs(0.1);
-    catch
-        warning('WaitSecs not working. Function not included');
-        out = false;
-        return
-    end
     out = true; %If out == false, the loading of the experiment will be cancled. 
 end
 
@@ -108,17 +100,23 @@ function out = getLoadFunction()
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
 % Any change to event will be saved for the runFunction
-    out = ''; %may be multiline!
+    out = ['if ~exist(''SoundDataset'', ''var'')\r\n SoundDataset = struct;\r\nend\r\n'... %may be multiline!
+           'eval(sprintf(''[SoundDataset.%%s.Sounds SoundDataset.%%s.Files] = loadSoundDatasetSounds(event.datasetname);'',event.datasetname, event.datasetname));\r\n'...
+           'eval(sprintf(''SoundDataset.%%s.ids=1:length(SoundDataset.%%s.Sounds);'',event.datasetname, event.datasetname));\r\n'];
 end
 
 function out = getRunFunction()
 %event.eventData contains your requested data type from a dataset.
+%windowPtr contains the Psychtoolbox window pointer (handle)
+%reply is the struct in which you can create fields to save data
+%reply.timeEventStart contains the time passed since the start of the event
+%startTime contains the time since the start of the block (excl. loading)
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'WaitSecs(event.time);';
+    out = '';
 end
 
 function out = getQuestStruct()
@@ -135,10 +133,11 @@ function out = getQuestStruct()
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
     q = struct;
-    q(1).name = 'Wait time (secs)';
-    q(1).sort = 'edit';
-    q(1).data = '0';
-    q(1).toolTip = 'Can be 0.1 as well!';
+    
+    q(1).name = 'Select Dataset:';
+    q(1).sort = 'popupmenu';
+    q(1).data = getDatasets();
+    
     out = q; %See eventEditor
 end
 
@@ -155,7 +154,8 @@ function out = getEventStruct(data)
 % lenght + 2 will contain whether data selection is random (read only)
 % length + 3 will contain whether to put back a selected file after using
 % it.
-    event = struct;
-    event.time = str2double(data(1).String);
-    out = event;
+    e = struct;
+    e.datasetname = data(1).Answer;
+    e.alias = data(1).Answer;
+    out = e;
 end
