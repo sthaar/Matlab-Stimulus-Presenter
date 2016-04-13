@@ -13,6 +13,7 @@ function res = gateway(varargin)
 %     getQuestStruct: should return a eventEditor compatible struct. if 0, no questions asked. Empty struct will be passed to getEventStruct
 %     getEventStruct: given the resulting questStruct (named answerStruct), create a eventStruct you can use.
 %     getName:        should return the name of this event.
+%     getDescription: Should return the description for the end user
 % notes:
 %   the structure containing your data (made in getEventStruct) is always
 %   named 'event'. Make sure you use that in getLoadFun and getRunFun.
@@ -71,15 +72,20 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Flip Screen';
+    out = 'Jitter'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Flips the buffers and writes the new one to screen';
+    out = 'Wait random time';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
+%     out = 'number'; % I need numbers
+%     out = 'string'; % I need strings
+%     out = 'image';  % I need images (paths to)
+%     out = 'video';  % I need videos (paths to)
+%     out = 'sound';  % I need sounds (paths to)
 end
 
 function out = init()
@@ -97,6 +103,8 @@ function out = getLoadFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
+% if out == '', no load function will be written.
+% Any change to event will be saved for the runFunction
     out = ''; %may be multiline!
 end
 
@@ -107,43 +115,48 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'Screen(''Flip'',windowPtr, event.delay, double(~event.clear));';
+    out = 'WaitSecs(event.range(randi(length(event.range))))';
 end
 
 function out = getQuestStruct()
-% questionStruct(1).name = 'event Type';
-% questionStruct(1).sort = 'text';
-% questionStruct(1).data = 'EventName';
-%
-% questionStruct(2).name = 'Random';
-% questionStruct(2).sort = 'popup';
-% questionStruct(2).data = { 'Yes' ; 'No' };
+questionStruct(1).name = 'Minimum interval ';
+questionStruct(1).sort = 'edit';
+questionStruct(1).data = '0';
+
+questionStruct(2).name = 'Maximum interval ';
+questionStruct(2).sort = 'edit';
+questionStruct(2).data = '3';
+
+questionStruct(3).name = 'Step size';
+questionStruct(3).sort = 'edit';
+questionStruct(3).data = '.5';
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
-    q = struct;
-    q(1).name = 'delay';
-    q(1).sort = 'edit';
-    q(1).data = '0';
-    q(1).toolTip = 'x seconds before the images gets shown';
-    
-    q(2).name = '';
-    q(2).sort = 'checkbox';
-    q(2).data = 'clear screen';
-    q(2).toolTip = 'If checked: Clears the screen and then draws the buffer';
-    out = q; %See eventEditor
+% If out == 0: No question dialog will popup and no questions are asked.
+% getEventStruct will be called regardless.
+    out = questionStruct; %See eventEditor
 end
 
-function out = getEventStruct(answersOfQuestions)
+function out = getEventStruct(data)
+% This function MUST return a struct.
+% The following struct names are in use and will be overwritten
+%   - .name => Contains getEventName()
+%   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
+% IN the last place of the struct (if length was 3, the last place will be
+% 4) will be the dataset name used (if dataType ~= '')
+% You cannot change it, but you can throw an error if you dont want it!
+% lenght + 2 will contain whether data selection is random (read only)
+% length + 3 will contain whether to put back a selected file after using
+% it.
     event = struct;
-    %Delay
-    event.delay = str2double( answersOfQuestions(1).Answer ) ;
-    if isnan(event.delay)
-       event.delay = 0; 
-    end
-    %Clear screen
-    event.clear = answersOfQuestions(2).Value;
-    
-    out = event; %No other data needed
+    rangeMin    = str2num(data(1).String);
+    rangeMax    = str2num(data(2).String);
+    rangeStep   = str2num(data(3).String);
+    timeRange   = rangeMin:rangeStep:rangeMax;
+%     rangeSize   = length(timeRange);
+    event.range = timeRange;
+    out = event;
 end

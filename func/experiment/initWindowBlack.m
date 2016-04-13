@@ -39,7 +39,7 @@ end
 screens = Screen('Screens');
 %Get the screen we want
 %If external exists, we want the primary screen. For reasons
-screenNumber = min(screens);
+screenNumber = max(screens);
 handle = Screen('OpenWindow',screenNumber,screenColor);
 
 %Hide cursor
@@ -66,7 +66,13 @@ DrawFormattedText(handle,'You can quit this experiment at any time using shift +
 %flip the screen (to show the text)
 Screen('Flip',handle);
 
-KbWait(-1);
+[secs] = KbWait(-1);
+if secs < 0.1
+    error('Keywait function not working correctly. Please try again...');
+    clear all
+    clear mex
+    clear functions
+end
 Screen('Flip',handle);
 end
 

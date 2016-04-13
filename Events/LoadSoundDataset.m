@@ -13,6 +13,7 @@ function res = gateway(varargin)
 %     getQuestStruct: should return a eventEditor compatible struct. if 0, no questions asked. Empty struct will be passed to getEventStruct
 %     getEventStruct: given the resulting questStruct (named answerStruct), create a eventStruct you can use.
 %     getName:        should return the name of this event.
+%     getDescription: Should return the description for the end user
 % notes:
 %   the structure containing your data (made in getEventStruct) is always
 %   named 'event'. Make sure you use that in getLoadFun and getRunFun.
@@ -71,15 +72,15 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Start Sound'; % The displayed event name
+    out = 'Load sound dataset'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Loads and starts a sound (mp3, flac etc)';
+    out = 'Loads All sounds from a dataset for imediate playback';
 end
 
 function out = dataType()
-    out = 'sound';  % I need sounds (paths to)
+    out = '';       % No data required (you may set static data using the questStruct or load)
 end
 
 function out = init()
@@ -98,39 +99,24 @@ function out = getLoadFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
-    %out = 'event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)'; %may be multiline!
-% You have acces to:
-%   reply: Type is struct. You can leave any data for analysis (write/read)
-%   nEvents: scalar containing the number of events in this block (read only)
-%   event: A struct containing .name (read only) and .data (read/write).
-%   (read/write) for the rest.
-%   audioHandles: A local global containing all audio handles in the
-%   format: audioHandles(soundID) = psychtoolboxAudioHandle; (used to stop
-%   sound by other sound events);
-out = ...
-    ['[aData, Fs] = audioread(event.data);\r\n' ...
-    'if size(aData,1) < 2\r\n' ...
-    '    aData = [aData ; aData];\r\n' ...
-    'end\r\n' ...
-    'aData = transpose(aData); %for some reason...\r\n' ...
-    'hAudio = PsychPortAudio(''Open'' ,[],1,[],Fs,2);\r\n' ...
-    'PsychPortAudio(''FillBuffer'',hAudio,aData);\r\n' ...
-    '%onset = PsychPortAudio(''Start'',hAudio,1,0,0);\r\n' ...
-    'audioHandles(event.id) = hAudio; % creates a local variable for the next audio related function\r\n' ...
-    'event.hAudio = hAudio; \r\n'];
+% Any change to event will be saved for the runFunction
+    out = ['if ~exist(''SoundDataset'', ''var'')\r\n SoundDataset = struct;\r\nend\r\n'... %may be multiline!
+           'eval(sprintf(''[SoundDataset.%%s.Sounds SoundDataset.%%s.Files] = loadSoundDatasetSounds(event.datasetname);'',event.datasetname, event.datasetname));\r\n'...
+           'eval(sprintf(''SoundDataset.%%s.ids=1:length(SoundDataset.%%s.Sounds);'',event.datasetname, event.datasetname));\r\n'];
 end
 
 function out = getRunFunction()
 %event.eventData contains your requested data type from a dataset.
+%windowPtr contains the Psychtoolbox window pointer (handle)
+%reply is the struct in which you can create fields to save data
+%reply.timeEventStart contains the time passed since the start of the event
+%startTime contains the time since the start of the block (excl. loading)
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% You have acces to:
-%   reply: Type is struct. You can leave any data for analysis
-% startTime = PsychPortAudio('Start', pahandle [, repetitions=1] [, when=0] [, waitForStart=0] [, stopTime=inf] [, resume=0]);
-    out = 'PsychPortAudio(''Start'',event.hAudio,event.rep,event.delay,event.waitUntillStart, event.stopAfter);';
+    out = '';
 end
 
 function out = getQuestStruct()
@@ -147,36 +133,10 @@ function out = getQuestStruct()
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
     q = struct;
-    q(1).name = 'Event Name';
-    q(1).sort = 'edit';
-    q(1).data = getEventName();
-    q(1).toolTip = 'The name of the event (only for you <3)';
     
-    q(2).name = 'Sound ID';
-    q(2).sort = 'popupmenu';
-    q(2).data = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
-    q(2).toolTip = 'The id is needed to stop (or start or resume or what ever) this specific sound in other events';
-    
-    q(3).name = 'delay';
-    q(3).sort = 'edit';
-    q(3).data = '0';
-    q(3).toolTip = 'Delay the start of the sound';
-    
-    q(4).name = '';
-    q(4).sort = 'checkbox';
-    q(4).data = 'wait for the sound to start';
-    q(4).toolTip = '''Freezes'' the program untill the sounds starts playing';
-    
-    q(5).name = 'Stop sound after';
-    q(5).sort = 'edit';
-    q(5).data = 'inf';
-    q(5).toolTip = 'Stops playing sound after x seconds';
-    
-    q(6).name = 'Repeat times';
-    q(6).sort = 'edit';
-    q(6).data = '1';
-    q(6).toolTip = 'Repeats x times, where x == 1 is play once. x may be smaller than 1 to play for example 50% (x==0.5)';
-    
+    q(1).name = 'Select Dataset:';
+    q(1).sort = 'popupmenu';
+    q(1).data = getDatasets();
     
     out = q; %See eventEditor
 end
@@ -188,22 +148,14 @@ function out = getEventStruct(data)
 %   - .data => Contains the requested dataType (reletaive path)
 % You can use:
 %   - .alias as the displayed name for the event in event editor
-%    PsychPortAudio(''Start'',event.hAudio,1,event.delay,event.waitUntillStart, event.stopAfter);
-    event = struct;
-    event.alias = data(1).String;
-    event.id = data(2).Value;
-    event.delay = str2double(data(3).String);
-    if isnan(event.delay)
-        event.delay = 0;
-    end
-    event.waitUntillStart = data(4).Value;
-    event.stopAfter = str2double(data(5).String);
-    if isnan(event.stopAfter)
-        event.stofAfter = Inf;
-    end
-    event.rep = str2double(data(6).String);
-    if isnan(event.rep)
-        event.rep = 1;
-    end
-    out = event;
+% IN the last place of the struct (if length was 3, the last place will be
+% 4) will be the dataset name used (if dataType ~= '')
+% You cannot change it, but you can throw an error if you dont want it!
+% lenght + 2 will contain whether data selection is random (read only)
+% length + 3 will contain whether to put back a selected file after using
+% it.
+    e = struct;
+    e.datasetname = data(1).Answer;
+    e.alias = data(1).Answer;
+    out = e;
 end
