@@ -151,6 +151,7 @@ try
     [ExperimentData eventNames] = generateExperiment(generatorPackage);
     compileTrialRunner(eventNames);
     initEvents(eventNames);
+    clear functions;
 catch e
     delete(h);
     waitfor(errordlg(sprintf('Error while generating experiment:\n%s', e.message)));
@@ -158,7 +159,7 @@ catch e
 end
 delete(h);
 % Run experiment
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 oldLevel = Screen('Preference', 'Verbosity', 0);
 try
     hW = initWindowBlack(ExperimentData.preMessage);

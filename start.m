@@ -70,8 +70,6 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     % UIWAIT makes start wait for user response (see UIRESUME)
     % uiwait(handles.startMenu);
     %%  Add path
-    global oldpath
-    oldpath = path;
     addpath(genpath('func'));
     addpath(genpath('Menus'));
     
@@ -142,10 +140,8 @@ function startMenu_DeleteFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 disp('Quitting...');
 % Reset old path
-global oldpath;
-path(oldpath);
-% and clean the globals
-clear global;
+rmpath(genpath('func'));
+rmpath(genpath('Menus'));
 end
 
 

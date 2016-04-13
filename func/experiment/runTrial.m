@@ -81,34 +81,12 @@ switch mode
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
             % Run event
-% generated script "Load sound dataset" from LoadSoundDataset.m
-if strcmp(eventName,'Load sound dataset')
-if ~exist('SoundDataset', 'var')
- SoundDataset = struct;
-end
-eval(sprintf('[SoundDataset.%s.Sounds SoundDataset.%s.Files] = loadSoundDatasetSounds(event.datasetname);',event.datasetname, event.datasetname));
-eval(sprintf('SoundDataset.%s.ids=1:length(SoundDataset.%s.Sounds);',event.datasetname, event.datasetname));
-
-
-end
-% generated script "Play dataset sound" from PlaySoundDataset.m
-if strcmp(eventName,'Play dataset sound')
-if event.random
-    event.soundID = eval(sprintf('SoundDataset.%s.ids(randi(length(SoundDataset.%s.ids)));', event.datasetname, event.datasetname));
-end
-if ~event.putBack
-    eval(sprintf('SoundDataset.%s.ids(SoundDataset.%s.ids==event.soundID)= [];', event.datasetname, event.datasetname));
-end
-event.sHandle = eval(sprintf('SoundDataset.%s.Sounds{event.soundID};', event.datasetname));
-
-event.sHandle.play();
-reply.soundID = event.soundID;
-
-end
-% generated script "Wait" from wait.m
-if strcmp(eventName,'Wait')
-
-WaitSecs(event.time);
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+event.im = imread(event.data);
+Screen('PutImage', windowPtr, event.im);
+Screen('Flip', windowPtr, event.delay, double(~event.clear));
+reply.data = event.data;
 end
             % Save
             reply.timeEventEnd = GetSecs() - startTime;
@@ -123,27 +101,10 @@ end
         for i=1:nEvents % load
             event = events{i};
             eventName = event.name;
-% generated script "Load sound dataset" from LoadSoundDataset.m
-if strcmp(eventName,'Load sound dataset')
-if ~exist('SoundDataset', 'var')
- SoundDataset = struct;
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+event.im = imread(event.data);
 end
-eval(sprintf('[SoundDataset.%s.Sounds SoundDataset.%s.Files] = loadSoundDatasetSounds(event.datasetname);',event.datasetname, event.datasetname));
-eval(sprintf('SoundDataset.%s.ids=1:length(SoundDataset.%s.Sounds);',event.datasetname, event.datasetname));
-
-end
-% generated script "Play dataset sound" from PlaySoundDataset.m
-if strcmp(eventName,'Play dataset sound')
-if event.random
-    event.soundID = eval(sprintf('SoundDataset.%s.ids(randi(length(SoundDataset.%s.ids)));', event.datasetname, event.datasetname));
-end
-if ~event.putBack
-    eval(sprintf('SoundDataset.%s.ids(SoundDataset.%s.ids==event.soundID)= [];', event.datasetname, event.datasetname));
-end
-event.sHandle = eval(sprintf('SoundDataset.%s.Sounds{event.soundID};', event.datasetname));
-
-end
-% event Wait has no load function. (wait)
             events{i} = event; % save event data (that is loaded for the run fun)
         end
         replyIter = 1;
@@ -157,19 +118,11 @@ end
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
             % Run event
-% generated script "Load sound dataset" from LoadSoundDataset.m
-if strcmp(eventName,'Load sound dataset')
-
-end
-% generated script "Play dataset sound" from PlaySoundDataset.m
-if strcmp(eventName,'Play dataset sound')
-event.sHandle.play();
-reply.soundID = event.soundID;
-
-end
-% generated script "Wait" from wait.m
-if strcmp(eventName,'Wait')
-WaitSecs(event.time);
+% generated script "Show Image" from showImage.m
+if strcmp(eventName,'Show Image')
+Screen('PutImage', windowPtr, event.im);
+Screen('Flip', windowPtr, event.delay, double(~event.clear));
+reply.data = event.data;
 end
             % Save data
             reply.timeEventEnd = GetSecs() - startTime;
