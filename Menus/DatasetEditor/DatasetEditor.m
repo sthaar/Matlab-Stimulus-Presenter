@@ -197,6 +197,10 @@ function buttonAdd_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 [filenames, path] = uigetfile('*.*','Select files...','','Multiselect','on');
 % Copy all files to the datastruct directory and add to datainfo
+
+if ~iscell(filenames)
+    filenames = {filenames};
+end
 fullpaths = cell(length(filenames),1);
 for fi=1:length(filenames)
     filename = filenames{fi};
@@ -221,6 +225,7 @@ function buttonRemove_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 file = handles.listbox.String{handles.listbox.Value};
+handles.listbox.Value = handles.listbox.Value - 1;
 updateDataset(handles.myData.databaseName, {}, {file});
 guiUpdate(handles);
 

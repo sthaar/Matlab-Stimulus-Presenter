@@ -218,9 +218,6 @@ function addExisting_Callback(hObject, eventdata, handles)
 % hObject    handle to addExisting (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(handles.blockList.String)
-    return
-end
 [file,path] = uigetfile('*.mat', 'Open block','Block.mat');
 if exist(fullfile(path, file),'file')
     try

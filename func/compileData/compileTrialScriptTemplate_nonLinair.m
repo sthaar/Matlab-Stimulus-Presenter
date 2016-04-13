@@ -117,6 +117,7 @@ switch mode
                 reply.alias = event.alias;
             end
             replyData{replyIter} = reply;
+            events{eventIter} = event; % save event data (that is loaded for the run fun)
             % Iters
             replyIter = replyIter + 1;
             eventIter = eventIter + 1;

@@ -81,12 +81,48 @@ switch mode
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
             % Run event
+% generated script "Load sound dataset" from LoadSoundDataset.m
+if strcmp(eventName,'Load sound dataset')
+if ~exist('SoundDataset', 'var')
+ SoundDataset = struct;
+end
+eval(sprintf('[SoundDataset.%s.Sounds SoundDataset.%s.Files] = loadSoundDatasetSounds(event.datasetname);',event.datasetname, event.datasetname));
+eval(sprintf('SoundDataset.%s.ids=1:length(SoundDataset.%s.Sounds);',event.datasetname, event.datasetname));
+
+
+end
+% generated script "Play dataset sound" from PlaySoundDataset.m
+if strcmp(eventName,'Play dataset sound')
+if event.random
+    event.soundID = eval(sprintf('SoundDataset.%s.ids(randi(length(SoundDataset.%s.ids)));', event.datasetname, event.datasetname));
+end
+if ~event.putBack
+    eval(sprintf('SoundDataset.%s.ids(SoundDataset.%s.ids==event.soundID)= [];', event.datasetname, event.datasetname));
+end
+event.sHandle = eval(sprintf('SoundDataset.%s.Sounds{event.soundID};', event.datasetname));
+
+reply.soundStartTime = PsychPortAudio('Start', event.sHandle, event.repetitions, 0 , event.waitForStart , event.stopTime , 0);
+reply.soundID = event.soundID;
+
+
+end
 % generated script "Show Image" from showImage.m
 if strcmp(eventName,'Show Image')
 event.im = imread(event.data);
 Screen('PutImage', windowPtr, event.im);
 Screen('Flip', windowPtr, event.delay, double(~event.clear));
 reply.data = event.data;
+end
+% generated script "Wait" from wait.m
+if strcmp(eventName,'Wait')
+
+WaitSecs(event.time);
+reply.waittime = event.time;
+end
+% generated script "Repeat x events" from flowEvent_repeat.m
+if strcmp(eventName,'Repeat x events')
+
+
 end
             % Save
             reply.timeEventEnd = GetSecs() - startTime;
@@ -101,10 +137,32 @@ end
         for i=1:nEvents % load
             event = events{i};
             eventName = event.name;
+% generated script "Load sound dataset" from LoadSoundDataset.m
+if strcmp(eventName,'Load sound dataset')
+if ~exist('SoundDataset', 'var')
+ SoundDataset = struct;
+end
+eval(sprintf('[SoundDataset.%s.Sounds SoundDataset.%s.Files] = loadSoundDatasetSounds(event.datasetname);',event.datasetname, event.datasetname));
+eval(sprintf('SoundDataset.%s.ids=1:length(SoundDataset.%s.Sounds);',event.datasetname, event.datasetname));
+
+end
+% generated script "Play dataset sound" from PlaySoundDataset.m
+if strcmp(eventName,'Play dataset sound')
+if event.random
+    event.soundID = eval(sprintf('SoundDataset.%s.ids(randi(length(SoundDataset.%s.ids)));', event.datasetname, event.datasetname));
+end
+if ~event.putBack
+    eval(sprintf('SoundDataset.%s.ids(SoundDataset.%s.ids==event.soundID)= [];', event.datasetname, event.datasetname));
+end
+event.sHandle = eval(sprintf('SoundDataset.%s.Sounds{event.soundID};', event.datasetname));
+
+end
 % generated script "Show Image" from showImage.m
 if strcmp(eventName,'Show Image')
 event.im = imread(event.data);
 end
+% event Wait has no load function. (wait)
+% event Repeat x events has no load function. (flowEvent_repeat)
             events{i} = event; % save event data (that is loaded for the run fun)
         end
         replyIter = 1;
@@ -118,11 +176,31 @@ end
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
             % Run event
+% generated script "Load sound dataset" from LoadSoundDataset.m
+if strcmp(eventName,'Load sound dataset')
+
+end
+% generated script "Play dataset sound" from PlaySoundDataset.m
+if strcmp(eventName,'Play dataset sound')
+reply.soundStartTime = PsychPortAudio('Start', event.sHandle, event.repetitions, 0 , event.waitForStart , event.stopTime , 0);
+reply.soundID = event.soundID;
+
+
+end
 % generated script "Show Image" from showImage.m
 if strcmp(eventName,'Show Image')
 Screen('PutImage', windowPtr, event.im);
 Screen('Flip', windowPtr, event.delay, double(~event.clear));
 reply.data = event.data;
+end
+% generated script "Wait" from wait.m
+if strcmp(eventName,'Wait')
+WaitSecs(event.time);
+reply.waittime = event.time;
+end
+% generated script "Repeat x events" from flowEvent_repeat.m
+if strcmp(eventName,'Repeat x events')
+
 end
             % Save data
             reply.timeEventEnd = GetSecs() - startTime;
@@ -131,6 +209,7 @@ end
                 reply.alias = event.alias;
             end
             replyData{replyIter} = reply;
+            events{eventIter} = event; % save event data (that is loaded for the run fun)
             % Iters
             replyIter = replyIter + 1;
             eventIter = eventIter + 1;
