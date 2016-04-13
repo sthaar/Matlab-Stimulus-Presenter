@@ -71,15 +71,15 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Flip Screen';
+    out = 'Start audio'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Flips the buffers and writes the new one to screen';
+    out = 'Loads and starts a sound (mp3, flac etc)';
 end
 
 function out = dataType()
-    out = '';       % No data required (you may set static data using the questStruct or load)
+    out = 'sound';  % I need sounds (paths to)
 end
 
 function out = init()
@@ -97,7 +97,32 @@ function out = getLoadFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = ''; %may be multiline!
+% if out == '', no load function will be written.
+    %out = 'event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)'; %may be multiline!
+% You have acces to:
+%   reply: Type is struct. You can leave any data for analysis (write/read)
+%   nEvents: scalar containing the number of events in this block (read only)
+%   event: A struct containing .name (read only) and .data (read/write).
+%   (read/write) for the rest.
+%   audioHandles: A local global containing all audio handles in the
+%   format: audioHandles(soundID) = psychtoolboxAudioHandle; (used to stop
+%   sound by other sound events);
+% out = ...
+%     ['[aData, Fs] = audioread(event.data);\r\n' ...
+%     'if size(aData,1) < 2\r\n' ...
+%     '    aData = [aData ; aData];\r\n' ...
+%     'end\r\n' ...
+%     'aData = transpose(aData); %for some reason...\r\n' ...
+%     'hAudio = PsychPortAudio(''Open'' ,[],1,[],Fs,2);\r\n' ...
+%     'PsychPortAudio(''FillBuffer'',hAudio,aData, 1);\r\n' ...
+%     '%onset = PsychPortAudio(''Start'',hAudio,1,0,0);\r\n' ...
+%     'audioHandles(event.id) = hAudio; % creates a local variable for the next audio related function\r\n' ...
+%     'event.hAudio = hAudio;\r\nclear aData Fs'];
+    out = ['[aData, Fs] = audioread(event.data);\r\n'...
+           'if ~(event.stopAfter > length(aData)/Fs)\r\n'...
+           'aData = aData(1:int32(event.stopAfter*Fs));\r\n'...
+           'end\r\n'...
+           'event.hAudio = audioplayer(aData,Fs);\r\n'];
 end
 
 function out = getRunFunction()
@@ -107,8 +132,11 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'Screen(''Flip'',windowPtr, event.delay, double(~event.clear));';
+% You have acces to:
+%   reply: Type is struct. You can leave any data for analysis
+% startTime = PsychPortAudio('Start', pahandle [, repetitions=1] [, when=0] [, waitForStart=0] [, stopTime=inf] [, resume=0]);
+    %out = 'PsychPortAudio(''Start'',event.hAudio,event.rep,event.delay,event.waitUntillStart, event.stopAfter);\r\nreply.data=event.data;';
+    out = 'event.hAudio.play();';
 end
 
 function out = getQuestStruct()
@@ -122,28 +150,67 @@ function out = getQuestStruct()
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
+% If out == 0: No question dialog will popup and no questions are asked.
+% getEventStruct will be called regardless.
     q = struct;
-    q(1).name = 'delay';
+    q(1).name = 'Event Name';
     q(1).sort = 'edit';
-    q(1).data = '0';
-    q(1).toolTip = 'x seconds before the images gets shown';
+    q(1).data = getEventName();
+    q(1).toolTip = 'The name of the event (only for you <3)';
     
-    q(2).name = '';
-    q(2).sort = 'checkbox';
-    q(2).data = 'clear screen';
-    q(2).toolTip = 'If checked: Clears the screen and then draws the buffer';
+    q(2).name = 'Sound ID';
+    q(2).sort = 'popupmenu';
+    q(2).data = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,...
+                 21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40};
+    q(2).toolTip = 'The id is needed to stop (or start or resume or what ever) this specific sound in other events';
+    
+%     q(3).name = 'delay';
+%     q(3).sort = 'edit';
+%     q(3).data = '0';
+%     q(3).toolTip = 'Delay the start of the sound';
+    
+    q(3).name = '';
+    q(3).sort = 'checkbox';
+    q(3).data = 'wait for the sound to start';
+    q(3).toolTip = '''Freezes'' the program untill the sounds starts playing';
+    
+    q(4).name = 'Stop sound after';
+    q(4).sort = 'edit';
+    q(4).data = 'inf';
+    q(4).toolTip = 'Stops playing sound after x seconds';
+    
+%     q(5).name = 'Repeat times';
+%     q(5).sort = 'edit';
+%     q(5).data = '1';
+%     q(5).toolTip = 'Repeats x times, where x == 1 is play once. x may be smaller than 1 to play for example 50% (x==0.5)';
+ 
+    
     out = q; %See eventEditor
 end
 
-function out = getEventStruct(answersOfQuestions)
+function out = getEventStruct(data)
+% This function MUST return a struct.
+% The following struct names are in use and will be overwritten
+%   - .name => Contains getEventName()
+%   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
+%    PsychPortAudio(''Start'',event.hAudio,1,event.delay,event.waitUntillStart, event.stopAfter);
     event = struct;
-    %Delay
-    event.delay = str2double( answersOfQuestions(1).Answer ) ;
-    if isnan(event.delay)
-       event.delay = 0; 
+    event.alias = data(1).String;
+    event.id = data(2).Value;
+%     event.delay = str2double(data(3).String);
+%     if isnan(event.delay)
+%         event.delay = 0;
+%     end
+    event.waitUntillStart = data(3).Value;
+    event.stopAfter = str2double(data(4).String);
+    if isnan(event.stopAfter)
+        event.stofAfter = Inf;
     end
-    %Clear screen
-    event.clear = answersOfQuestions(2).Value;
-    
-    out = event; %No other data needed
+%     event.rep = str2double(data(6).String);
+%     if isnan(event.rep)
+%         event.rep = 1;
+%     end
+    out = event;
 end

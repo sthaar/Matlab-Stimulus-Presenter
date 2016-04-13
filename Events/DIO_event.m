@@ -13,6 +13,7 @@ function res = gateway(varargin)
 %     getQuestStruct: should return a eventEditor compatible struct. if 0, no questions asked. Empty struct will be passed to getEventStruct
 %     getEventStruct: given the resulting questStruct (named answerStruct), create a eventStruct you can use.
 %     getName:        should return the name of this event.
+%     getDescription: Should return the description for the end user
 % notes:
 %   the structure containing your data (made in getEventStruct) is always
 %   named 'event'. Make sure you use that in getLoadFun and getRunFun.
@@ -71,11 +72,11 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Flip Screen';
+    out = 'DIO event'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'Flips the buffers and writes the new one to screen';
+    out = 'Changes the state of the selected channel';
 end
 
 function out = dataType()
@@ -83,7 +84,7 @@ function out = dataType()
 end
 
 function out = init()
-    out = true; %If out == false, the loading of the experiment will be cancled. 
+    out = (initDio()==1); %If out == false, the loading of the experiment will be cancled. 
 end
 
 function out = enabled()
@@ -97,7 +98,14 @@ function out = getLoadFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = ''; %may be multiline!
+% if out == '', no load function will be written.
+% Any change to event will be saved for the runFunction
+    out = [ 'global diosessions;\r\n' ...
+            'event.s = diosessions(event.devname);\r\n' ...
+            'event.s.outState(event.ch) = event.value;\r\n' ...
+            'diosessions(event.devname) = event.s;' ...
+          ];
+ %may be multiline!
 end
 
 function out = getRunFunction()
@@ -107,8 +115,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'Screen(''Flip'',windowPtr, event.delay, double(~event.clear));';
+    out = ['event.s.session.outputSingleScan(event.s.outState);'];
 end
 
 function out = getQuestStruct()
@@ -122,28 +129,65 @@ function out = getQuestStruct()
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
-    q = struct;
-    q(1).name = 'delay';
-    q(1).sort = 'edit';
-    q(1).data = '0';
-    q(1).toolTip = 'x seconds before the images gets shown';
+% If out == 0: No question dialog will popup and no questions are asked.
+% getEventStruct will be called regardless.
+    DioDevices = getConfigDevs();
+    channels = {};
+    for i=1:length(DioDevices(1).channels)
+        ch = DioDevices(1).channels{i};
+        channels = [channels {ch.name}];
+    end
     
-    q(2).name = '';
-    q(2).sort = 'checkbox';
-    q(2).data = 'clear screen';
-    q(2).toolTip = 'If checked: Clears the screen and then draws the buffer';
-    out = q; %See eventEditor
+    out = struct; %See eventEditor
+    out(1).name = 'Device:';
+    out(1).sort = 'popupmenu';
+    out(1).data = DioDevices(1).name;
+    out(1).toolTip = 'Select one of the supported devices';
+    
+    out(2).name = 'Channel:';
+    out(2).sort = 'popupmenu';
+    out(2).data = channels;
+    out(2).toolTip = 'Select the channel for which the value shall be changed';
+    
+    out(3).name = 'Value:';
+    out(3).sort = 'popupmenu';
+    out(3).data = {'0', '1'};
+    out(3).toolTip = 'Select the output value (0=low, 1=high)';
 end
 
-function out = getEventStruct(answersOfQuestions)
+function out = getEventStruct(data)
+% This function MUST return a struct.
+% The following struct names are in use and will be overwritten
+%   - .name => Contains getEventName()
+%   - .data => Contains the requested dataType (reletaive path)
+% You can use:
+%   - .alias as the displayed name for the event in event editor
+% IN the last place of the struct (if length was 3, the last place will be
+% 4) will be the dataset name used (if dataType ~= '')
+% You cannot change it, but you can throw an error if you dont want it!
+% lenght + 2 will contain whether data selection is random (read only)
+% length + 3 will contain whether to put back a selected file after using
+% it.
     event = struct;
-    %Delay
-    event.delay = str2double( answersOfQuestions(1).Answer ) ;
-    if isnan(event.delay)
-       event.delay = 0; 
-    end
-    %Clear screen
-    event.clear = answersOfQuestions(2).Value;
     
-    out = event; %No other data needed
+    DioDevices = getConfigDevs();
+    dio = DioDevices(data(1).Value); %GEt selected dio device
+    chs = dio.channels;
+    ch = data(2).Answer;
+    event.alias = ch;
+    nOut = 0;
+    
+    for i=1:length(chs)
+        if ~strcmp(DioDevices(1).channels{i}.direction,'InputOnly')
+            nOut = nOut + 1;
+        end
+        if strcmp(DioDevices(1).channels{i}.name, ch)
+            event.ch = nOut;
+            break;
+        end
+    end
+    event.devname = data(1).Answer;
+    event.value = data(3).Value - 1;
+
+    out = event;
 end

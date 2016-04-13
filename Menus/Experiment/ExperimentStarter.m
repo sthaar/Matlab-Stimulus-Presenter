@@ -150,6 +150,8 @@ try
     h = waitbar(0,'Generating experiment...');
     [ExperimentData eventNames] = generateExperiment(generatorPackage);
     compileTrialRunner(eventNames);
+    initEvents(eventNames);
+    clear functions;
 catch e
     delete(h);
     waitfor(errordlg(sprintf('Error while generating experiment:\n%s', e.message)));
@@ -157,7 +159,7 @@ catch e
 end
 delete(h);
 % Run experiment
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 oldLevel = Screen('Preference', 'Verbosity', 0);
 try
     hW = initWindowBlack(ExperimentData.preMessage);
@@ -195,7 +197,7 @@ for i=1:length(Data)
         eventdata = Data{i}{j};
         fnames = fieldnames(eventdata);
         for k=1:length(fnames)
-            eval(sprintf('data(dataiter).%s = eventdata.%s',fnames{k}, fnames{k}));            
+            eval(sprintf('data(dataiter).%s = eventdata.%s;',fnames{k}, fnames{k}));            
         end
 		% Add extra collums
         data(dataiter).subjectId = subjectId;

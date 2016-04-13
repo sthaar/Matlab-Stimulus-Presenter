@@ -110,6 +110,10 @@ end
 
 function out = getRunFunction()
 %event.eventData contains your requested data type from a dataset.
+%windowPtr contains the Psychtoolbox window pointer (handle)
+%reply is the struct in which you can create fields to save data
+%reply.timeEventStart contains the time passed since the start of the event
+%startTime contains the time since the start of the block (excl. loading)
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...

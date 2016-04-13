@@ -118,7 +118,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'WaitSecs(event.time)';
+    out = 'WaitSecs(event.time);\r\nreply.waittime = event.time;';
 end
 
 function out = getQuestStruct()
@@ -156,6 +156,6 @@ function out = getEventStruct(data)
 % length + 3 will contain whether to put back a selected file after using
 % it.
     event = struct;
-    event.time = str2num(data(1).String);
+    event.time = str2double(data(1).String);
     out = event;
 end

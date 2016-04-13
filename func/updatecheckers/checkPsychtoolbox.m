@@ -30,7 +30,7 @@ function [installed] = checkPsychtoolbox
 ppath = addpath('Psychtoolbox');
 addpath('SVN');
 [doesExist, version] = psychtoolboxExists;
-targetVersion = 'Psychtoolbox-3.0.10';
+targetVersion = ''%'Psychtoolbox-3.0.10';
 if ispc
     % We are on windows
     targetDir = 'c:\\Psychtoolbox';

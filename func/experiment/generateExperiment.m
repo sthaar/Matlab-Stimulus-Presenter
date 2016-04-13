@@ -116,6 +116,7 @@ for i=1:length(creator) %For block in blocks
                 datasets(event.dataset) = dataset;
             end
         end
+        events{j}.blockname = block.name;
         trial{j} = events{j};
     end
     rte.trials{i} = trial;
