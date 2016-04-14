@@ -22,7 +22,7 @@ function [ boolSucces ] = compileTrialRunner( varargin )
 boolSucces = false;
 
 %% input
-template = 'func/compileData/compileTrialScriptTemplate.m';
+template = 'func/compileData/compileTrialScriptTemplate_nonLinair.m';
 desti = 'func/experiment/runTrial.m';
 eventDir = 'Events';
 

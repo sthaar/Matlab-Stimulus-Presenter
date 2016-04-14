@@ -72,28 +72,23 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Example'; % The displayed event name
+    out = 'DIO event'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'An example of an event';
+    out = 'Changes the state of the selected channel';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
-    out = 'number'; % I need numbers
-    out = 'string'; % I need strings
-    out = 'image';  % I need images (paths to)
-    out = 'video';  % I need videos (paths to)
-    out = 'sound';  % I need sounds (paths to)
 end
 
 function out = init()
-    out = true; %If out == false, the loading of the experiment will be cancled. 
+    out = (initDio()==1); %If out == false, the loading of the experiment will be cancled. 
 end
 
 function out = enabled()
-	out = false; %If this function returns false, it will not be included.
+	out = true; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
@@ -105,24 +100,22 @@ function out = getLoadFunction()
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
 % Any change to event will be saved for the runFunction
-    out = 'event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)'; %may be multiline!
+    out = [ 'global diosessions;\r\n' ...
+            'event.s = diosessions(event.devname);\r\n' ...
+            'event.s.outState(event.ch) = event.value;\r\n' ...
+            'diosessions(event.devname) = event.s;' ...
+          ];
+ %may be multiline!
 end
 
 function out = getRunFunction()
 %event.eventData contains your requested data type from a dataset.
-%windowPtr contains the Psychtoolbox window pointer (handle)
-%reply is the struct in which you can create fields to save data
-%reply.timeEventStart contains the time passed since the start of the event
-%startTime contains the time since the start of the block (excl. loading)
-% To change the flow of the events (eg: go 2 events back)
-% you can use variable: eventIter
-% Also nEvents variable might come in handy
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'whatIDo(event.myOwnNameForMyData)';
+    out = ['event.s.session.outputSingleScan(event.s.outState);'];
 end
 
 function out = getQuestStruct()
@@ -138,7 +131,28 @@ function out = getQuestStruct()
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
-    out = 0; %See eventEditor
+    DioDevices = getConfigDevs();
+    channels = {};
+    for i=1:length(DioDevices(1).channels)
+        ch = DioDevices(1).channels{i};
+        channels = [channels {ch.name}];
+    end
+    
+    out = struct; %See eventEditor
+    out(1).name = 'Device:';
+    out(1).sort = 'popupmenu';
+    out(1).data = DioDevices(1).name;
+    out(1).toolTip = 'Select one of the supported devices';
+    
+    out(2).name = 'Channel:';
+    out(2).sort = 'popupmenu';
+    out(2).data = channels;
+    out(2).toolTip = 'Select the channel for which the value shall be changed';
+    
+    out(3).name = 'Value:';
+    out(3).sort = 'popupmenu';
+    out(3).data = {'0', '1'};
+    out(3).toolTip = 'Select the output value (0=low, 1=high)';
 end
 
 function out = getEventStruct(data)
@@ -154,9 +168,26 @@ function out = getEventStruct(data)
 % lenght + 2 will contain whether data selection is random (read only)
 % length + 3 will contain whether to put back a selected file after using
 % it.
-% The following variables can be used to influence the experiment
-% generation. 
-%         out.generatorRepeat => repeats the previous events
-%         out.generatorNBack  => repeats go n back
-    out = struct;
+    event = struct;
+    
+    DioDevices = getConfigDevs();
+    dio = DioDevices(data(1).Value); %GEt selected dio device
+    chs = dio.channels;
+    ch = data(2).Answer;
+    event.alias = ch;
+    nOut = 0;
+    
+    for i=1:length(chs)
+        if ~strcmp(DioDevices(1).channels{i}.direction,'InputOnly')
+            nOut = nOut + 1;
+        end
+        if strcmp(DioDevices(1).channels{i}.name, ch)
+            event.ch = nOut;
+            break;
+        end
+    end
+    event.devname = data(1).Answer;
+    event.value = data(3).Value - 1;
+
+    out = event;
 end

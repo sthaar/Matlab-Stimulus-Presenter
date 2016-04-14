@@ -12,6 +12,8 @@
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%%
+% Added question.Value option to set Value property
 function h = eventEditor(questionStruct)
 %% eventEditor: creates a GUI for the user to change the given options
 % creates an option GUI from a struct using the default matlab
@@ -121,12 +123,20 @@ for question = questionStruct
                                 'Position',[x y sx sy],...
                                 'TooltipString', toolTip);
     % draw option
-    x = xstart + (dx+sx);
-    handles(i).quest = uicontrol('Style',question.sort,...
-                                'String',question.data,...
-                                'Position',[x y sx sy],...
-                                'TooltipString', toolTip);
-                            
+    if isfield(question,'Value') && isnumeric(question.Value) && ~isempty(question.Value)
+        x = xstart + (dx+sx);
+        handles(i).quest = uicontrol('Style',question.sort,...
+                                    'String',question.data,...
+                                    'Position',[x y sx sy],...
+                                    'TooltipString', toolTip,...
+                                    'Value', question.Value);
+    else
+        x = xstart + (dx+sx);
+        handles(i).quest = uicontrol('Style',question.sort,...
+                                    'String',question.data,...
+                                    'Position',[x y sx sy],...
+                                    'TooltipString', toolTip);
+    end
 %% Output handle (see function decl.)
 end
 
@@ -161,9 +171,9 @@ for i=1:length(handles)
     answers(i).String = handles(i).quest.String;
     answers(i).Value = handles(i).quest.Value;
     if iscell(answers(i).String)
-        answers(i).answer = answers(i).String{answers(i).Value};
+        answers(i).Answer = answers(i).String{answers(i).Value};
     else
-        answers(i).answer = answers(i).String;
+        answers(i).Answer = answers(i).String;
     end
 end
 

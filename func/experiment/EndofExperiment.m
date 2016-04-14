@@ -18,7 +18,6 @@ function EndofExperiment(handle, Message, delay )
 
 %Reset priority to normal
 Priority(0);
-
 switch nargin
     case 0
         sca; %No handle means we cannot display anything
@@ -34,6 +33,10 @@ end
 %clear screen
 Screen('Flip',handle);
 
+%Wait one sec to recover
+WaitSecs(1);
+
+% Wait secs
 WaitSecs(delay);
 
 DrawFormattedText(handle,Message,'center','center',[255 255 255 255]);

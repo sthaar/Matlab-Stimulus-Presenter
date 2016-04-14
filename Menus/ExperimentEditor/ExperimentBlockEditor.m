@@ -273,7 +273,7 @@ if ~isempty(handles.eventSelectorMenu.String)
                     % We got our answers. Use the add answer stuff
                     if ~strcmp(type,'')
                         % Data is requested!
-                        dataset = answers(l+1).answer;
+                        dataset = answers(l+1).Answer;
                         random = answers(l+2).Value;
                         putBack = answers(l+3).Value;
                     end

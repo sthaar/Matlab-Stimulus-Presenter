@@ -70,19 +70,25 @@ replyData = cell(1,nEvents);
 switch mode
     %% no preload
     case 0
+        replyIter = 1;
+        eventIter = 1;
         startTime = GetSecs();
-        for i=1:nEvents
-            % Create data
-            event = events{i};
+        while eventIter <= nEvents
+            % Craete data
+            event = events{eventIter};
             reply = struct;
             reply.name = event.name;
             eventName = event.name;
             reply.timeEventStart = GetSecs() - startTime;
-            % Run/Load
+            % Run event
             \\runload
             % Save
             reply.timeEventEnd = GetSecs() - startTime;
-            replyData{i} = reply;
+            reply.blockname = event.blockname;
+            replyData{replyIter} = reply;
+            % Iter
+            replyIter = replyIter + 1;
+            eventIter = eventIter + 1;
         end
     %% preload  
     case 1
@@ -92,10 +98,12 @@ switch mode
             \\load
             events{i} = event; % save event data (that is loaded for the run fun)
         end
+        replyIter = 1;
+        eventIter = 1;
         startTime = GetSecs();
-        for i=1:nEvents % run
+        while eventIter <= nEvents % run
+            event = events{eventIter};
             % Create data
-            event = events{i};
             reply = struct;
             reply.name = event.name;
             eventName = event.name;
@@ -104,8 +112,15 @@ switch mode
             \\run
             % Save data
             reply.timeEventEnd = GetSecs() - startTime;
-            reply.blockname = event.block;
-            replyData{i} = reply;
+            reply.blockname = event.blockname;
+            if isfield(event, 'alias')
+                reply.alias = event.alias;
+            end
+            replyData{replyIter} = reply;
+            events{eventIter} = event; % save event data (that is loaded for the run fun)
+            % Iters
+            replyIter = replyIter + 1;
+            eventIter = eventIter + 1;
         end
     otherwise
         error('Unknown trial run mode')

@@ -36,7 +36,7 @@ function varargout = ExperimentEditor(varargin)
 
 % Edit the above text to modify the response to help ExperimentEditor
 
-% Last Modified by GUIDE v2.5 06-Apr-2016 08:14:22
+% Last Modified by GUIDE v2.5 12-Apr-2016 09:23:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -126,7 +126,11 @@ if ~isempty((blocks))
     end
 end
 handles.blockList.String = blockList;
-
+if handles.blockList.Value < 1
+    handles.blockList.Value = 1;
+elseif handles.blockList.Value > length(handles.blockList.String)
+    handles.blockList.Value = length(handles.blockList.String);
+end
 % Selected block info
 idx = handles.blockList.Value;
 if idx > length(handles.blockList.String) || idx == 0;
@@ -193,7 +197,10 @@ end
 block = struct;
 block.name = name{1};
 block.events = {};
+set(handles.figure1,'Visible','off')
 waitfor(ExperimentBlockEditor(block));
+set(handles.figure1,'Visible','on')
+
 global experimentlbockeditorreturnvalue
 newBlock = experimentlbockeditorreturnvalue;
 clear experimentlbockeditorreturnvalue;
@@ -211,9 +218,6 @@ function addExisting_Callback(hObject, eventdata, handles)
 % hObject    handle to addExisting (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(handles.blockList.String)
-    return
-end
 [file,path] = uigetfile('*.mat', 'Open block','Block.mat');
 if exist(fullfile(path, file),'file')
     try
@@ -358,8 +362,9 @@ if isempty(handles.blockList.String)
     return
 end
 block = handles.experiment.creator{handles.blockList.Value};
-
+set(handles.figure1,'Visible','off')
 waitfor(ExperimentBlockEditor(block));
+set(handles.figure1,'Visible','on')
 global experimentlbockeditorreturnvalue
 newBlock = experimentlbockeditorreturnvalue;
 clear experimentlbockeditorreturnvalue;
