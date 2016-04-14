@@ -141,7 +141,10 @@ catch e
     errordlg(sprintf('Error while creating experiment:\n%s',e.message));
     rethrow(e);
 end
+set(handles.figure1,'Visible','off')
 waitfor(ExperimentEditor(name));
+set(handles.figure1,'Visible','on')
+
 guiUpdate(handles);
 
 % --- Executes on button press in EditExperiment.
@@ -156,7 +159,10 @@ name = handles.listbox1.String{handles.listbox1.Value};
 if ~experimentExists(name)
     errordlg(sprintf('Error! Experiment %s does not exist...', name));
 end
+
+set(handles.figure1,'Visible','off')
 waitfor(ExperimentEditor(name));
+set(handles.figure1,'Visible','on')
 guiUpdate(handles);
 
 % --- Executes on button press in DeleteExperiment.

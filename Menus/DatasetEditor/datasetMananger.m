@@ -77,11 +77,18 @@ guiUpdate(handles);
 % uiwait(handles.figure1);
 
 function guiUpdate(handles)
+
 try
     handles.listbox.String = getDatasets();
 catch e
     waitfor(errordlg('Error while evaluating the datasets'));
     rethrow(e);
+end
+if handles.listbox.Value > length(handles.listbox.String)
+    handles.listbox.Value = length(handles.listbox.String);
+end
+if handles.listbox.Value < 1
+    handles.listbox.Value = 1;
 end
 guiUpdateInfo(handles);
 
@@ -161,16 +168,17 @@ handles.figure1.Visible = 'Off';
 name = inputdlg('Please enter a name');
 if ~isempty(name)
     try
+        set(handles.figure1,'Visible','off')
         createDataset(name{1}, {}, '', struct);
         waitfor(DatasetEditor(name{1},0));
     catch e
         waitfor(errordlg(sprintf('Error: %s',e.message)));
-        handles.figure1.Visible = 'On';
+        set(handles.figure1,'Visible','on')
         guiUpdate(handles);
         rethrow(e);
     end
 end
-handles.figure1.Visible = 'On';
+set(handles.figure1,'Visible','on')
 guiUpdate(handles);
 
 % --- Executes on button press in buttonEdit.
@@ -184,14 +192,15 @@ end
 handles.figure1.Visible = 'Off';
 name = handles.listbox.String{handles.listbox.Value};
 try
+    set(handles.figure1,'Visible','off')
     waitfor(DatasetEditor(name,0));
 catch e
     waitfor(errordlg(sprintf('Error: %s',e.message)));
-    handles.figure1.Visible = 'On';
+    set(handles.figure1,'Visible','on')
     guiUpdate(handles);
     rethrow(e);
 end
-handles.figure1.Visible = 'On';
+set(handles.figure1,'Visible','on')
 guiUpdate(handles);
 
 % --- Executes on button press in buttonRename.

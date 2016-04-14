@@ -72,20 +72,15 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Example'; % The displayed event name
+    out = 'Play dataset sound'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'An example of an event';
+    out = 'The play function for playing files loaded with LoadSoundDataset';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
-    out = 'number'; % I need numbers
-    out = 'string'; % I need strings
-    out = 'image';  % I need images (paths to)
-    out = 'video';  % I need videos (paths to)
-    out = 'sound';  % I need sounds (paths to)
 end
 
 function out = init()
@@ -93,7 +88,7 @@ function out = init()
 end
 
 function out = enabled()
-	out = false; %If this function returns false, it will not be included.
+	out = true; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
@@ -105,7 +100,25 @@ function out = getLoadFunction()
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
 % Any change to event will be saved for the runFunction
-    out = 'event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)'; %may be multiline!
+%     event.datasetname = data(1).Answer;
+%     %event.sHandle
+%     event.repetitions = str2double(data(4).Answer);
+%     event.waitForStart = 0;
+%     event.stopTime = Inf;
+%     % load variables
+%     event.putBack = q(5).Value;
+%     event.random = q(2).Value;
+%     event.soundID = 0;
+%     event.soundID = q(4).Value;
+    out = [''...
+    'if event.random\r\n'...
+    '    event.soundID = eval(sprintf(''SoundDataset.%%s.ids(randi(length(SoundDataset.%%s.ids)));'', event.datasetname, event.datasetname));\r\n'...
+    'end\r\n'...
+    'if ~event.putBack\r\n'...
+    '    eval(sprintf(''SoundDataset.%%s.ids(SoundDataset.%%s.ids==event.soundID)= [];'', event.datasetname, event.datasetname));\r\n'...
+    'end\r\n'...
+    'event.sHandle = eval(sprintf(''SoundDataset.%%s.Sounds{event.soundID};'', event.datasetname));\r\n'...
+    ];
 end
 
 function out = getRunFunction()
@@ -114,15 +127,20 @@ function out = getRunFunction()
 %reply is the struct in which you can create fields to save data
 %reply.timeEventStart contains the time passed since the start of the event
 %startTime contains the time since the start of the block (excl. loading)
-% To change the flow of the events (eg: go 2 events back)
-% you can use variable: eventIter
-% Also nEvents variable might come in handy
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'whatIDo(event.myOwnNameForMyData)';
+% [SoundDatasetSounds SoundDatasetFiles] = loadSoundDatasetSounds(event.datasetname);
+% [SoundDataset.%s.Sounds SoundDataset.%s.Files]
+            %         startTime = PsychPortAudio('Start', pahandle [, repetitions=1] [, when=0] [, waitForStart=0] [, stopTime=inf] [, resume=0]);
+    out = ['reply.soundStartTime = PsychPortAudio(''Start'', event.sHandle, event.repetitions, 0 , event.waitForStart , event.stopTime , 0);\r\n'...
+           'reply.soundID = event.soundID;\r\n'...
+           '\r\n'];
+       %PsychPortAudio(''Stop'', event.sHandle ,1);
+%     out = ['event.sHandle.play();\r\n'...
+%            'reply.soundID = event.soundID;\r\n'];
 end
 
 function out = getQuestStruct()
@@ -138,7 +156,42 @@ function out = getQuestStruct()
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
-    out = 0; %See eventEditor
+    q = struct;
+    % Questions:
+    %   - Random => Except (for target, input must be edit '[1 5 7]' to
+    %   exclude 1 5 and 7)
+    %   - Putback => Can be played once more. Should take from a vector
+    %   from 1:length instead of the cell array of handles (dont wanna
+    %   loose the handle.
+    %       - Reset event
+    %   - Repetitions in double
+    %   - Dataset
+    %   - wait for start?
+    %   - stopTime?
+    q(1).name = 'Dataset';
+    q(1).sort = 'popupmenu';
+    q(1).data = getDatasets();
+    
+    q(2).name = 'Randomness';
+    q(2).sort = 'checkbox';
+    q(2).data = 'Random sound';
+    q(2).toolTip = 'If checked, soundID is ignored';
+    
+    q(3).name = 'Sound ID (if not random)';
+    q(3).sort = 'edit' ;
+    q(3).data = '';
+    q(3).toolTip = 'ID''s are in order from 1 to n-sounds in order of the dataset';
+    
+    q(4).name = 'Repetitions';
+    q(4).sort = 'edit';
+    q(4).data = '1';
+    q(4).toolTip = '2 repetitions means play 2x. 0.5 repetitions means play 1/2 of the sound';
+    
+    q(5).name = 'put Back:';
+    q(5).sort = 'checkbox';
+    q(5).data = 'put back?';
+    q(5).Value = 1;
+    out = q; %See eventEditor
 end
 
 function out = getEventStruct(data)
@@ -154,9 +207,16 @@ function out = getEventStruct(data)
 % lenght + 2 will contain whether data selection is random (read only)
 % length + 3 will contain whether to put back a selected file after using
 % it.
-% The following variables can be used to influence the experiment
-% generation. 
-%         out.generatorRepeat => repeats the previous events
-%         out.generatorNBack  => repeats go n back
-    out = struct;
+% PsychPortAudio(''Start'', event.sHandle, event.repetitions, 0 , event.waitForStart , event.stopTime , 0);
+    event = struct;
+    event.datasetname = data(1).Answer;
+    %event.sHandle
+    event.repetitions = str2double(data(4).Answer);
+    event.waitForStart = 1;
+    event.stopTime = Inf;
+    % load variables
+    event.putBack = data(5).Value;
+    event.random = data(2).Value;
+    event.soundID = str2double(data(3).Answer);
+    out = event;
 end

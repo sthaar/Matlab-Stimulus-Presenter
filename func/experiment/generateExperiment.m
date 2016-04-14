@@ -87,13 +87,33 @@ end
 % eventStruct.randomData = random;
 % eventStruct.putBack = putBack;
 rte.trials = {}; %Blocks
+
 %rte.trials(1).events = {};
 for i=1:length(creator) %For block in blocks
     block = creator{i}; %block struct
     events = block.events; %Êvent cell
     trial = {};
-    for j=1:length(events)
+    tmp = cell(1,length(events));
+%     for j=1:length(events)
+    eventCounter = 0;
+    while eventCounter < length(events)
+         eventCounter = eventCounter + 1;
+         j = eventCounter;
         event = events{j};
+        %Event flow control options
+%         out.generatorRepeat = str2double(data(2).Answer);
+%         out.generatorNBack = floor(str2double(data(1).Answer));
+        if isfield(event, 'generatorRepeat') && isfield(event, 'generatorNBack')
+            if isempty(tmp{j})
+                tmp{j} = 1;
+                eventCounter = eventCounter - 1 - event.generatorNBack;
+            elseif tmp{j} < event.generatorRepeat
+                tmp{j} = tmp{j} + 1;
+                eventCounter = eventCounter - 1 - event.generatorNBack;
+            end
+        end
+            
+        
         %Get random data from dataset if random is needed
         if isfield(event, 'dataset') && ~isempty(datasets)
             dataset = datasets(event.dataset);
@@ -116,7 +136,8 @@ for i=1:length(creator) %For block in blocks
                 datasets(event.dataset) = dataset;
             end
         end
-        trial{j} = events{j};
+        events{j}.blockname = block.name;
+        trial = [trial events(j)];
     end
     rte.trials{i} = trial;
 end

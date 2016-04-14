@@ -111,7 +111,7 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'Screen(''PutImage'', windowPtr, event.im);\r\nScreen(''Flip'', windowPtr, event.delay, event.clear);';
+    out = 'Screen(''PutImage'', windowPtr, event.im);\r\nScreen(''Flip'', windowPtr, event.delay, double(~event.clear));\r\nreply.data = event.data;';
 end
 
 function out = getQuestStruct()
@@ -154,7 +154,7 @@ function out = getEventStruct(answersOfQuestions)
     event = struct;
     event.alias = answersOfQuestions(1).String;
     %Delay
-    event.delay = str2double( answersOfQuestions(2).answer ) ;
+    event.delay = str2double( answersOfQuestions(2).Answer ) ;
     if isnan(event.delay)
        event.delay = 0; 
     end

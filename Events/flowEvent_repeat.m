@@ -72,20 +72,15 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'Example'; % The displayed event name
+    out = 'Repeat x events'; % The displayed event name
 end
 
 function out = getDescription()
-    out = 'An example of an event';
+    out = 'Repeat previous events';
 end
 
 function out = dataType()
     out = '';       % No data required (you may set static data using the questStruct or load)
-    out = 'number'; % I need numbers
-    out = 'string'; % I need strings
-    out = 'image';  % I need images (paths to)
-    out = 'video';  % I need videos (paths to)
-    out = 'sound';  % I need sounds (paths to)
 end
 
 function out = init()
@@ -93,7 +88,7 @@ function out = init()
 end
 
 function out = enabled()
-	out = false; %If this function returns false, it will not be included.
+	out = true; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
@@ -105,7 +100,8 @@ function out = getLoadFunction()
 %               'Still the second line!\r\nThe Third line!'];
 % if out == '', no load function will be written.
 % Any change to event will be saved for the runFunction
-    out = 'event.myOwnNameForMyData = howToLoadData(event.WhatINeedData)'; %may be multiline!
+%     out = 'event.repeater = 0;'; %may be multiline!
+    out = '';
 end
 
 function out = getRunFunction()
@@ -122,7 +118,18 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'whatIDo(event.myOwnNameForMyData)';
+%     out = [...
+%     'if event.repeater < event.repeat\r\n'...
+%     '    event.repeater = event.repeater + 1;\r\n'...
+%     '    reply.repeat = event.repeat;\r\n'...
+%     '    eventIter = eventIter - 1 - event.nBack;\r\n'...
+%     '    if eventIter < 0\r\n'...
+%     '        eventIter = 0;\r\n'...
+%     '    end\r\n'...
+%     'end\r\n'...
+%     ];
+%         
+    out = '';
 end
 
 function out = getQuestStruct()
@@ -138,7 +145,17 @@ function out = getQuestStruct()
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
 % If out == 0: No question dialog will popup and no questions are asked.
 % getEventStruct will be called regardless.
-    out = 0; %See eventEditor
+    q = struct;
+    q(1).name = 'Go back x events';
+    q(1).sort = 'edit';
+    q(1).data = '1';
+    q(1).toolTip = 'How many events should we go back?';
+    
+    q(2).name = 'repeat x times';
+    q(2).sort = 'edit';
+    q(2).data = '1';
+    q(2).toolTip = 'Repeat this x times (so x times this event will cause it to go x back)';
+    out = q; %See eventEditor
 end
 
 function out = getEventStruct(data)
@@ -154,9 +171,7 @@ function out = getEventStruct(data)
 % lenght + 2 will contain whether data selection is random (read only)
 % length + 3 will contain whether to put back a selected file after using
 % it.
-% The following variables can be used to influence the experiment
-% generation. 
-%         out.generatorRepeat => repeats the previous events
-%         out.generatorNBack  => repeats go n back
     out = struct;
+    out.generatorRepeat = str2double(data(2).Answer);
+    out.generatorNBack = floor(str2double(data(1).Answer));
 end

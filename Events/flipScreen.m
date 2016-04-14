@@ -108,7 +108,7 @@ function out = getRunFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
 % Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'Screen(''Flip'',windowPtr, event.delay, event.clear);';
+    out = 'Screen(''Flip'',windowPtr, event.delay, double(~event.clear));';
 end
 
 function out = getQuestStruct()
@@ -138,7 +138,7 @@ end
 function out = getEventStruct(answersOfQuestions)
     event = struct;
     %Delay
-    event.delay = str2double( answersOfQuestions(1).answer ) ;
+    event.delay = str2double( answersOfQuestions(1).Answer ) ;
     if isnan(event.delay)
        event.delay = 0; 
     end
