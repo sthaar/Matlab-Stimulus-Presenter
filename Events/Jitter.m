@@ -115,7 +115,8 @@ function out = getRunFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    out = 'WaitSecs(event.range(randi(length(event.range))))';
+    out = 'wait = event.range(randi(length(event.range))); WaitSecs(wait); reply.waittime = wait; \n\r';
+    
 end
 
 function out = getQuestStruct()
