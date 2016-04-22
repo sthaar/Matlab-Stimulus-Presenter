@@ -39,7 +39,12 @@ end
 screens = Screen('Screens');
 %Get the screen we want
 %If external exists, we want the primary screen. For reasons
-screenNumber = max(screens);
+% screenNumber = max(screens);
+if length(screens)>1
+    screenNumber = 1;
+else
+    screenNumber = max(screens);
+end
 handle = Screen('OpenWindow',screenNumber,screenColor);
 
 %Hide cursor
