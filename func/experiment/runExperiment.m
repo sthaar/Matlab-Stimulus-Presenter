@@ -30,7 +30,7 @@ end
 
 data = {};
 experimentName = ExperimentData.name;
-fprintf('Now starting experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
+fprintf('---------------------------- Now starting experiment "%s" (%s). ----------------------------\n',experimentName,datestr(datetime,'HH:MM:SS'));
 
 % 0 - Disable all output - Same as using the SuppressAllWarnings flag.
 % 1 - Only output critical errors.
@@ -94,7 +94,7 @@ catch e
     ShowCursor; %Show cursor
     sca; %Close screen
     PsychPortAudio('close'); %close all sounds and shutdown sound driver
-    fprintf('Aborted experiment "%s" at %s.\n',experimentName,datestr(datetime,'HH:MM:SS'));
+    fprintf('---------------------------- Aborted experiment "%s" at %s. ----------------------------\n',experimentName,datestr(datetime,'HH:MM:SS'));
     errordlg(e.message); %give error
     disp(getReport(e));
 %    rmpath('func');
@@ -103,7 +103,7 @@ catch e
 end
 %% cleaning
 PsychPortAudio('close'); %close all sounds and shutdown sound driver
-fprintf('End of experiment "%s" (%s).\n',experimentName,datestr(datetime,'HH:MM:SS'));
+fprintf('---------------------------- End of experiment "%s" (%s). ----------------------------\n',experimentName,datestr(datetime,'HH:MM:SS'));
 %rmpath('func');
 end
 
