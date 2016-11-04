@@ -84,13 +84,16 @@ if ~isstruct(blockData)
 end
 
 %% Handle input
-if ~isfield(blockData,'name') || ~isfield(blockData, 'events')
-    warning('Missing fields in struct: name OR events');
+if ~isfield(blockData,'name') || ~isfield(blockData, 'events') || ~isfield(blockData, 'answers')
+    warning('Missing fields in struct: name OR events OR answers');
     if ~isfield(blockData,'name')
         blockData.name = 'TheMostRandomNameEver';
     end
     if ~isfield(blockData, 'events')
         blockData.events = {};
+    end
+	if ~isfield(blockData, 'answers')
+        blockData.answers = {};
     end
 end
 
@@ -288,6 +291,7 @@ if ~isempty(handles.eventSelectorMenu.String)
                     eventStruct.name = eval(sprintf('%s(''getName'')',eventfile));
                     index = length(handles.blockData.events) + 1;
                     handles.blockData.events{index} = eventStruct;
+					handles.blockData.answers{index} = eventEditorFeedback;
                 end
             end
         else
