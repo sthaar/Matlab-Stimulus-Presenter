@@ -98,6 +98,8 @@ catch e
     errordlg(e.message); %give error
     disp(getReport(e));
 %    rmpath('func');
+    global bakdata;
+    bakdata = data;
     rethrow(e);
     %return;
 end

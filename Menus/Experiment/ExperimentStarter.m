@@ -177,11 +177,37 @@ catch e
         rethrow(e);
     end
 end
+%end of init
 try
     Data = runExperiment(ExperimentData,hW);
 catch e
     waitfor(errordlg(sprintf('Error while running the experiment! SORRY! More details in the Command Window')));
     EndofExperiment;
+    try
+        %% Process and save data
+            data = struct;
+            global bakdata;
+            Data = bakdata;
+            dataiter = 0;
+            for i=1:length(Data)
+                blocknr = sprintf('Block %i',i);
+                for j=1:length(Data{i})
+                    dataiter = dataiter + 1;
+                    eventdata = Data{i}{j};
+                    fnames = fieldnames(eventdata);
+                    for k=1:length(fnames)
+                        eval(sprintf('data(dataiter).%s = eventdata.%s;',fnames{k}, fnames{k}));            
+                    end
+                    % Add extra collums
+                    data(dataiter).subjectId = subjectId;
+                    data(dataiter).blocknr = blocknr;
+                end
+            end
+            exportStructToCSV(data,['Results_' name '.csv'],1);
+            msgbox(sprintf('Results saved (and appended) to: %s', fullfile(cd,['Results_' name '.csv'])));
+    catch e
+        waitfor(errordlg(sprintf('failed to save data! Sorry!')));
+    end
     rethrow(e)
 end
 EndofExperiment(hW,'You have reached the end! Thanks you for participating!');
