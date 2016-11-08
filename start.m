@@ -78,7 +78,13 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     mkdir('Experiments');
     %% PsychToolbox
     %It needs to be installed so... Lets check it!
-    checkPsychtoolbox;
+    try
+        checkPsychtoolbox;
+    catch e
+        errordlg(e.message,'Error while psychtoolboxing');
+        close;
+        
+    end
 end
 
 % --- Outputs from this function are returned to the command line.

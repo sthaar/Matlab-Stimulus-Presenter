@@ -30,7 +30,7 @@ function [installed] = checkPsychtoolbox
 ppath = addpath('Psychtoolbox');
 addpath('SVN');
 [doesExist, version] = psychtoolboxExists;
-targetVersion = ''%'Psychtoolbox-3.0.10';
+%targetVersion = ''%'Psychtoolbox-3.0.10';
 if ispc
     % We are on windows
     targetDir = 'c:\\Psychtoolbox';
@@ -54,15 +54,21 @@ else
     else
         %The installer exists, luckely!
         if strcmp(questdlg('Do you want to install Psychtoolbox now? (you need it to run experiments!)','Psychtoolbox','Yes','No','Yes'),'Yes')
-            msgbox('Now installing Psychtoolbox. Watch the console, you need to press a button.   Wait for:"Press RETURN or ENTER to confirm you read and understood the above message."  This can take a few minutes...','Warning, you need to do stuff');
+            msgbox('Now installing Psychtoolbox. Watch the console, questions will be asked by the installer."  This can take a few minutes...','Warning, you need to do stuff');
             %run('Psychtoolbox\\SetupPsychtoolbox.m');
             v = ver('matlab');
             if ~isempty(v)
                 v = v(1).Version; v = sscanf(v, '%i.%i.%i');
                 if (v(1) < 7) || ((v(1) == 7) && (v(2) < 4))
+                    errordlg(sprintf('Matlab version %i.%i not supported :(', v(1), v(2)), 'Unsupported matlab');
+                    error('Matlab version %i.%i not supported :(', v(1), v(2));
                     DownloadLegacyPsychtoolbox(targetDir);
                 else
-                    DownloadPsychtoolbox(targetDir,targetVersion);
+                    try
+                        DownloadPsychtoolbox(targetDir);
+                    catch e
+                        error('Error while downloading psychtoolbox:\n%s\nGo to http://psychtoolbox.org/download/ and download the zip',e.message);
+                    end
                 end
             else
                 waitfor(errordlg('Unable to determain matlab version. Please call for help'));
