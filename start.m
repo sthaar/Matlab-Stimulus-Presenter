@@ -74,11 +74,20 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     addpath(genpath('Menus'));
     
     %% Check data & experiment path
-    mkdir('Data');
-    mkdir('Experiments');
+    if ~exist('Data','dir')==7
+        mkdir('Data');
+    elseif ~exist('Experiments','dir')==7
+        mkdir('Experiments');
+    end
     %% PsychToolbox
     %It needs to be installed so... Lets check it!
-    checkPsychtoolbox;
+    try
+        checkPsychtoolbox;
+    catch e
+        errordlg(e.message,'Error while psychtoolboxing');
+        close;
+        
+    end
 end
 
 % --- Outputs from this function are returned to the command line.

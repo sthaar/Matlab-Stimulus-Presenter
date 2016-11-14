@@ -197,6 +197,7 @@ end
 block = struct;
 block.name = name{1};
 block.events = {};
+block.answers = {}; % This is where the answers to the questionstruct are stored
 set(handles.figure1,'Visible','off')
 waitfor(ExperimentBlockEditor(block));
 set(handles.figure1,'Visible','on')

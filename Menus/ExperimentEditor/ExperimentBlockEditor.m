@@ -84,13 +84,16 @@ if ~isstruct(blockData)
 end
 
 %% Handle input
-if ~isfield(blockData,'name') || ~isfield(blockData, 'events')
-    warning('Missing fields in struct: name OR events');
+if ~isfield(blockData,'name') || ~isfield(blockData, 'events') || ~isfield(blockData, 'answers')
+    warning('Missing fields in struct: name OR events OR answers');
     if ~isfield(blockData,'name')
         blockData.name = 'TheMostRandomNameEver';
     end
     if ~isfield(blockData, 'events')
         blockData.events = {};
+    end
+	if ~isfield(blockData, 'answers')
+        blockData.answers = {};
     end
 end
 
@@ -225,81 +228,29 @@ function buttonAddEvent_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonAddEvent (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[~,~,eventDir, eventMap ] = getEvents();
 if ~isempty(handles.eventSelectorMenu.String)
     eventname = handles.eventSelectorMenu.String{handles.eventSelectorMenu.Value};
-    eventfilef = fullfile(eventDir,[eventMap(eventname) '.m']);
-    eventfile = eventMap(eventname);
-    if ~exist(eventfilef,'file')
-        waitfor(errordlg('Error: Event could not be found! Make sure you didn''t change the Current Directory!'));
-        return
-    end
-    % global eventEditorFeedback
-    prevpath = addpath(eventDir);
+    % create event
     try
-        questStruct = eval(sprintf('%s(''getQuestStruct'')',eventfile));
-        if isstruct(questStruct)
-            type = eval(sprintf('%s(''dataType'')',eventfile));
-            if ~strcmp(type,'')
-                % Data is requested!
-                l = length(questStruct);
-                datasets = getDatasets();
-                if isempty(datasets)
-                    error('No dataset avaible! Please create one before using this event!');
-%                     questStruct(l+1).name = 'Dataset settings:';
-%                     questStruct(l+1).sort = 'text';
-%                     questStruct(l+1).data = 'No datasets available';
-                else
-                    %What dataset?
-                    questStruct(l+1).name = 'Choose Dataset:';
-                    questStruct(l+1).sort = 'popupmenu';
-                    questStruct(l+1).data = datasets;
-                    %Random?
-                    questStruct(l+2).name = 'Random selection?';
-                    questStruct(l+2).sort = 'popupmenu';
-                    questStruct(l+2).data = {'No', 'Yes'};
-                    %put back?
-                    questStruct(l+3).name = 'Put back?';
-                    questStruct(l+3).sort = 'popupmenu';
-                    questStruct(l+3).data = {'No', 'Yes'};
-                    questStruct(l+3).toolTip = 'In dutch, one would say: Met terugleggen. Meaning stimuli can be selected more than once';
-                end
-            end
-            if ~isempty(fieldnames(questStruct))
-                waitfor(questionDialog(questStruct));
-                global eventEditorFeedback
-                if isstruct(eventEditorFeedback);
-                    answers = eventEditorFeedback;
-                    % We got our answers. Use the add answer stuff
-                    if ~strcmp(type,'')
-                        % Data is requested!
-                        dataset = answers(l+1).Answer;
-                        random = answers(l+2).Value;
-                        putBack = answers(l+3).Value;
-                    end
-                    eventStruct = eval(sprintf('%s(''getEventStruct'',answers)',eventfile));
-                    if ~strcmp(type,'')
-                        eventStruct.dataset = dataset;
-                        eventStruct.randomData = random-1;
-                        eventStruct.putBack = putBack-1;
-                    end
-                    % event.name = the name given by event('getName')
-                    % event.alias is displayed if it exist
-                    eventStruct.name = eval(sprintf('%s(''getName'')',eventfile));
-                    index = length(handles.blockData.events) + 1;
-                    handles.blockData.events{index} = eventStruct;
-                end
-            end
-        else
-            warining('%s gave an invalid thing for getQuestStruct', eventname);
-        end
-        
+        [event, answers] = createEvent(eventname);
     catch e
         waitfor(errordlg(sprintf('Error while evaluating answers: %s',e.message)));
-        path(prevpath);
-        rethrow(e);
+        return
     end
-    path(prevpath);
+    
+    % add event
+    if isstruct(event)
+        index = length(handles.blockData.events) + 1;
+        handles.blockData.events{index} = event;
+        handles.blockData.answers{index} = answers;
+    else
+        if event == 0
+            waitfor(msgbox('Operation cancled', 'Event creator'));
+        else
+            errordlg('Unhandled exception in buttonAddEvent_Callback');
+            error('Unhandled exception');
+        end
+    end
 end
 guidata(handles.figure1, handles);
 guiUpdate(handles);
@@ -335,7 +286,38 @@ function buttonEditSelected_Callback(hObject, eventdata, handles)
 % hObject    handle to buttonEditSelected (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if isempty(handles.eventList.String)
+    return
+end
+% Variable assimilation
+index = handles.eventList.Value;
+event = handles.blockData.events{index};
+questAnsw = handles.blockData.answers{index};
 
+%Edit event
+try
+    [event, answers] = editEvent(event, questAnsw);
+catch e
+    waitfor(errordlg(sprintf('Error while evaluating answers: %s',e.message)));
+    return
+end
+
+% add event
+if isstruct(event)
+    handles.blockData.events{index} = event;
+    handles.blockData.answers{index} = answers;
+else
+    if event == 0
+        waitfor(msgbox('Operation cancled', 'Event creator'));
+    else
+        errordlg('Unhandled exception in buttonEditSelected_Callback');
+        error('Unhandled exception');
+    end
+end
+
+% Fin
+guidata(handles.figure1, handles);
+guiUpdate(handles);
 
 
 % --- Executes on button press in buttonUp.
