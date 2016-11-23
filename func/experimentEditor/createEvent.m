@@ -35,13 +35,13 @@ try
             l = length(questStruct);
             datasets = getDatasets();
             if isempty(datasets)
-                error('No dataset avaible! Please create one before using this event!');
+                error('No stimulus set avaible! Please create one before using this event!');
 %                     questStruct(l+1).name = 'Dataset settings:';
 %                     questStruct(l+1).sort = 'text';
 %                     questStruct(l+1).data = 'No datasets available';
             else
                 %What dataset?
-                questStruct(l+1).name = 'Choose Dataset:';
+                questStruct(l+1).name = 'Choose stimulus set:';
                 questStruct(l+1).sort = 'popupmenu';
                 questStruct(l+1).data = datasets;
                 %Random?
