@@ -119,7 +119,9 @@ if ~succes
     missingEvents
     missingDatasets
     corrupt
+    return
 end
+
 % Get GUI data
 generatorPackage = struct;
 
@@ -162,8 +164,10 @@ delete(h);
 Screen('Preference', 'SkipSyncTests', 0);
 oldLevel = Screen('Preference', 'Verbosity', 0);
 try
+    hObject.Enable = 'off';
     hW = initWindowBlack(ExperimentData.preMessage);
 catch e
+    hObject.Enable = 'on';
     EndofExperiment;
     if strcmp(e.message,'See error message printed above.')
         try
@@ -181,6 +185,7 @@ end
 try
     Data = runExperiment(ExperimentData,hW);
 catch e
+    hObject.Enable = 'on';
     waitfor(errordlg(sprintf('Error while running the experiment! SORRY! More details in the Command Window')));
     EndofExperiment;
     try
@@ -212,7 +217,7 @@ catch e
 end
 EndofExperiment(hW,'You have reached the end! Thanks you for participating!');
 Screen('Preference', 'Verbosity', oldLevel);
-
+hObject.Enable = 'on';
 %% Process and save data
 data = struct;
 dataiter = 0;
