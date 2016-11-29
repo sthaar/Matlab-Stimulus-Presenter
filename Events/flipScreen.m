@@ -108,7 +108,7 @@ function out = getRunFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
 % Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'Screen(''Flip'',windowPtr, event.delay, double(~event.clear));';
+    out = 'Screen(''Flip'',windowPtr, GetSecs()+event.delay, double(~event.clear),1);';
 end
 
 function out = getQuestStruct()
