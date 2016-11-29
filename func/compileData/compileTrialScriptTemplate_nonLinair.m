@@ -92,11 +92,11 @@ try
             end
         %% preload  
         case 1
-            for i=1:nEvents % load
-                event = events{i};
+            for iteratorwhichnamecannotbedupe=1:nEvents % load
+                event = events{iteratorwhichnamecannotbedupe};
                 eventName = event.name;
                 \\load
-                events{i} = event; % save event data (that is loaded for the run fun)
+                events{iteratorwhichnamecannotbedupe} = event; % save event data (that is loaded for the run fun)
             end
             replyIter = 1;
             eventIter = 1;
@@ -127,9 +127,9 @@ try
     end
 
     %% Clean audio handles
-    for i=1:length(audioHandles)
-        if ~(audioHandles(i)==0)
-            PsychPortAudio('Close' , audioHandles(i));
+    for iteratorwhichnamecannotbedupe=1:length(audioHandles)
+        if ~(audioHandles(iteratorwhichnamecannotbedupe)==0)
+            PsychPortAudio('Close' , audioHandles(iteratorwhichnamecannotbedupe));
         end
     end
 
