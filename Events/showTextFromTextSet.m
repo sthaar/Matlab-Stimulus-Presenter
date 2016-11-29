@@ -168,7 +168,8 @@ function out = getRunFunction()
 %                         [, winRect])
     out = [
         'reply.line = event.line;'...
-        'DrawFormattedText(windowPtr, reply.line,''center'',''center'',event.color);\r\n'
+        'DrawFormattedText(windowPtr, reply.line,''center'',''center'',event.color);\r\n'...
+        'Screen(''Flip'', windowPtr, 0, double(~event.clear));\r\n'
     ];
 end
 
@@ -211,6 +212,10 @@ function out = getQuestStruct()
     out(5).sort = 'edit';
     out(5).data = '[255 255 255]';
     out(5).toolTip = 'RGB colors, from 0 to 255. first one is red, second is green, third is blue.';
+    
+    out(6).name = '';
+    out(6).sort = 'checkbox';
+    out(6).data = 'clear screen';
 end
 
 function out = getEventStruct(answer)
@@ -236,4 +241,5 @@ function out = getEventStruct(answer)
     out.random = answer(3).Value;
     out.putback = answer(4).Value;
     out.color = eval(answer(5).String);
+    out.clear = answer(6).Value;
 end
