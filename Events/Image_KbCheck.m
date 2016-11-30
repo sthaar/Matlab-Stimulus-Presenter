@@ -13,7 +13,6 @@ function res = gateway(varargin)
 %     getQuestStruct: should return a eventEditor compatible struct. if 0, no questions asked. Empty struct will be passed to getEventStruct
 %     getEventStruct: given the resulting questStruct (named answerStruct), create a eventStruct you can use.
 %     getName:        should return the name of this event.
-%     getDescription: Should return the description for the end user
 % notes:
 %   the structure containing your data (made in getEventStruct) is always
 %   named 'event'. Make sure you use that in getLoadFun and getRunFun.
@@ -72,24 +71,22 @@ function res = gateway(varargin)
 end
 %% Do edit the following
 function out = getEventName()
-    out = 'WaitForKeyPress'; % The displayed event name
+    out = 'Image while KBcheck';
 end
 
 function out = getDescription()
-    out = 'The computer waits until the users presses a key';
+    out = 'Show and clear an image while recording reaction time';
 end
 
 function out = dataType()
-    out = '';       % No data required (you may set static data using the questStruct or load)
-%     out = 'number'; % I need numbers
-%     out = 'string'; % I need strings
-%     out = 'image';  % I need images (paths to)
-%     out = 'video';  % I need videos (paths to)
-%     out = 'sound';  % I need sounds (paths to)
+    out = 'image';  % I need images (paths to)
 end
 
 function out = init()
+	%global error % global error is read when a example returns false
+	%error = 'Example must not be included in a running experiemnt!.';
     out = true; %If out == false, the loading of the experiment will be cancled. 
+    % No init needed
 end
 
 function out = enabled()
@@ -103,10 +100,11 @@ function out = getLoadFunction()
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-% if out == '', no load function will be written.
-% Any change to event will be saved for the runFunction
-    out = [ ...
-        'if length(Screen(''Screens''))>1                                  \r\n' ...
+% Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
+     %may be multiline!
+     out = [...
+        'event.im = imread(event.data);                                     \r\n' ...
+        'if length(Screen(''Screens''))>1                                   \r\n' ...
             'screenNumber = 1;                                              \r\n' ...    
         'else                                                               \r\n' ...    
             'screenNumber = max(Screen(''Screens''));                       \r\n' ...    
@@ -125,40 +123,52 @@ function out = getLoadFunction()
         'event.barDimensions 	 = event.frameDimensions;                   \r\n' ...
         'event.frameColor      = [230 144 255];                             \r\n' ...
         'event.barColor        = [30 144 255];                              \r\n' ...
-        ];
+     ];
+    
 end
 
 function out = getRunFunction()
 %event.eventData contains your requested data type from a dataset.
-%windowPtr contains the Psychtoolbox window pointer (handle)
-%reply is the struct in which you can create fields to save data
-%reply.timeEventStart contains the time passed since the start of the event
-%startTime contains the time since the start of the block (excl. loading)
 % use \r\n for a new line.
 % tip: You can write multiple lines by using:
 %     string = ['My long strings first line\r\n', ...
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
-    
+   
     out = [...
-    'maxTime     = event.time;                                              \r\n' ...
+    'Screen(''PutImage'', windowPtr, event.im);                             \r\n' ...
+    '[~,name,ext] = fileparts(event.data);                                  \n\r' ...
+    'reply.image = strcat(name,ext);                                        \r\n' ...
+    'maxTime     = event.keyTime;                                           \r\n' ...
     'targetKey   = event.key;                                               \r\n' ...
     '[keyIsDown] = KbCheck;                                                 \r\n' ...
+    'shown       = 0;                                                       \r\n' ...
+    'cleared     = 0;                                                       \r\n' ...
     'while keyIsDown; [keyIsDown] = KbCheck; end;                           \r\n' ...
-    '[~, secs, keyCode] = KbCheck;                                          \r\n' ...
-    'startKbCheck   = GetSecs;                                              \r\n' ...
-    'while secs - startKbCheck < maxTime && ~any(keyCode(targetKey))        \r\n' ...    
+    '[~, ~, keyCode] = KbCheck;                                             \r\n' ...
+    'startCheck   = GetSecs;                                                \r\n' ...
+    'while (GetSecs - startCheck) < maxTime && ~any(keyCode(targetKey))     \r\n' ...
+        'if shown == 0 && (GetSecs - startCheck) > event.imageOnset         \r\n' ...
+             'reply.ImOnset = Screen(''Flip'', windowPtr, 0, 0) - startCheck;    shown = 1;              \r\n' ...
+        'end                                                                \r\n' ...
+        'if cleared == 0 && (GetSecs - startCheck) > event.imageOffset      \r\n' ...
+             'reply.ImOffset = Screen(''Flip'', windowPtr, 0, 0) - startCheck;    cleared = 1;            \r\n' ...
+        'end                                                                \r\n' ...
         'if event.waitBar                                                                       \r\n' ...
-            'percentage          = (GetSecs - startKbCheck) / maxTime;                            \r\n' ...
-            'event.barDimensions(3)    = event.barHorOffset+round(percentage * event.barWidth); \r\n' ...                                                                         \r\n' ...
+            'percentage          = (GetSecs - startCheck) / maxTime;                             \r\n' ...
+            'event.barDimensions(3)    = event.barHorOffset+round(percentage * event.barWidth); \r\n' ...
+            'if (GetSecs - startCheck) > event.imageOnset && (GetSecs - startCheck) < event.imageOffset \r\n' ...
+                'Screen(''PutImage'', windowPtr, event.im);                                     \r\n' ...
+                'end                                                                            \r\n' ...
             'Screen(''FillRect'' , windowPtr, event.barColor,   event.barDimensions);           \r\n' ...
             'Screen(''FrameRect'', windowPtr, event.frameColor, event.frameDimensions, 3);      \r\n' ...
             'Screen(''Flip'', windowPtr, 0, 0);                                                 \r\n' ...
-        'end   \r\n' ...
-        '[~, secs, keyCode] = KbCheck;                                      \r\n' ...
+        'end                                                                \r\n' ...
+        '[~, secs, keyCode] = KbCheck;                              \r\n' ...
     'end                                                                    \r\n' ...
+        'Screen(''Flip'', windowPtr, 0, 0);                                 \r\n' ...
     'if any(keyCode(targetKey))                                             \r\n' ...
-        'reply.RT  = secs - startKbCheck;                                   \r\n' ...
+        'reply.RT  = secs - startCheck;                                      \r\n' ...
         'reply.key = KbName(keyCode);                                       \r\n' ...
     'else                                                                   \r\n' ...
         'reply.RT  = NaN;                                                   \r\n' ...
@@ -168,32 +178,6 @@ function out = getRunFunction()
 end
 
 function out = getQuestStruct()
-questionStruct(1).name      = 'event Type';
-questionStruct(1).sort      = 'edit';
-questionStruct(1).data      = 'Wait for Press';
-questionStruct(1).tooltip   = '';
-
-questionStruct(2).name      = 'Specify key';
-questionStruct(2).sort      = 'edit';
-questionStruct(2).data      = 'space';
-questionStruct(2).tooltip   = 'leave empty for any key, type "space" for spacebar or "return" for enter';
-
-questionStruct(3).name      = 'Wait for (s)';
-questionStruct(3).sort      = 'edit';
-questionStruct(3).data      = 'Inf';
-questionStruct(3).tooltip   = 'Waits x seconds for a response before continueing to next event. Waits forever when value is Inf';
-
-questionStruct(4).name       = 'Cocktail bar';
-questionStruct(4).sort       = 'checkbox';
-questionStruct(4).data       = '';
-questionStruct(4).tooltop    = 'if enabled, a bar will indicate how much time is left to respond';
-   
-questionStruct(5).name       = 'Location';
-questionStruct(5).sort       = 'popupmenu';
-questionStruct(5).data       = {'top','bottom'};
-questionStruct(5).tooltop    = 'determines whether the waitbar will be shown at the top or bottom of the screen';
- 
-
 % questionStruct(1).name = 'event Type';
 % questionStruct(1).sort = 'text';
 % questionStruct(1).data = 'EventName';
@@ -201,60 +185,106 @@ questionStruct(5).tooltop    = 'determines whether the waitbar will be shown at 
 % questionStruct(2).name = 'Random';
 % questionStruct(2).sort = 'popup';
 % questionStruct(2).data = { 'Yes' ; 'No' };
+%
+% Data is always a string and is always displayed
+%
 % for sort:
 %     use one of these values: 'pushbutton' | 'togglebutton' | 'radiobutton' |
 %     'checkbox' | 'edit' | 'text' | 'slider' | 'frame' | 'listbox' | 'popupmenu'.
-% If out == 0: No question dialog will popup and no questions are asked.
-% getEventStruct will be called regardless.
-    out = questionStruct; %See eventEditor
+    q = struct;
+    q(1).name = 'Event name';
+    q(1).sort = 'edit';
+    q(1).data = 'Draw Image';
+ 
+    
+%     q(3).name = '';
+%     q(3).sort = 'checkbox';
+%     q(3).data = 'clear screen';
+%     q(3).toolTip = 'If checked: Clears the screen and then shows the image';
+    
+    q(2).name       = 'Image onset (s)';
+    q(2).sort       = 'edit';
+    q(2).data       = '0';
+    q(2).toolTip    = 'the image will be shown after x seconds';
+    
+    q(3).name       = 'Image offset (s)';
+    q(3).sort       = 'edit';
+    q(3).data       = '1';
+    q(3).toolTip    = 'the image will be cleared after x seconds';
+        
+    q(4).name       = 'Specify key';
+    q(4).sort       = 'edit';
+    q(4).data       = 'space';
+    q(4).toolTip    = 'Waits until specified key is pressed. Leave empty for any key, type "space" for spacebar or "return" for enter';
+    
+    q(5).name      = 'Wait for (s)';
+    q(5).sort      = 'edit';
+    q(5).data      = 'Inf';
+    q(5).tooltip   = 'Waits x seconds for a response before continueing to next event. Waits forever when value is Inf';
+    
+    q(6).name       = 'Cocktail bar';
+    q(6).sort       = 'checkbox';
+    q(6).data       = '';
+    q(6).tooltop    = 'if enabled, a bar will indicate how much time is left to respond';
+     
+    q(7).name       = 'Location';
+    q(7).sort       = 'popupmenu';
+    q(7).data       = {'top','bottom'};
+    q(7).tooltop    = 'determines whether the waitbar will be shown at the top or bottom of the screen';
+    
+    q(8).name = 'Behaviors';
+    q(8).sort = 'text';
+    q(8).data = 'Select options:';
+    out = q; %See eventEditor
 end
 
-function out = getEventStruct(data)
-% This function MUST return a struct.
-% The following struct names are in use and will be overwritten
-%   - .name => Contains getEventName()
-%   - .data => Contains the requested dataType (reletaive path)
-% You can use:
-%   - .alias as the displayed name for the event in event editor
-% IN the last place of the struct (if length was 3, the last place will be
-% 4) will be the dataset name used (if dataType ~= '')
-% You cannot change it, but you can throw an error if you dont want it!
-% lenght + 2 will contain whether data selection is random (read only)
-% length + 3 will contain whether to put back a selected file after using
-% it.
-    waitFor        = struct;
+function out = getEventStruct(answersOfQuestions)
+% event.data will be filled with the needed files specified in dataType()
+    event = struct;
+
+    % 1. event name
+    event.alias = answersOfQuestions(1).String;
+
+    % 2. image onset
+    event.imageOnset = eval(answersOfQuestions(2).String);
     
-    % 2. target key(s)
-    waitFor.key    = data(2).String;
-      if isempty(waitFor.key)
-        waitFor.key = ':';
-    elseif ismember(' ',waitFor.key)
-        keys = strsplit(waitFor.key);
-        waitFor.key = [];
+    % 3. image offset    
+    event.imageOffset = eval(answersOfQuestions(3).String);
+    
+    % 4. target key
+    event.key = answersOfQuestions(4).String;
+    if isempty(event.key)
+        event.key = ':';
+    elseif ismember(' ', event.key)
+        keys = strsplit(event.key);
+        event.key = [];
         for i = 1:length(keys)
-            waitFor.key = [waitFor.key, KbName(keys(i))];
+            event.key = [event.key, KbName(keys(i))];
         end        
     else
-        waitFor.key = KbName(waitFor.key);
-      end
+        event.key = KbName(event.key);
+    end
     
-    % 3. maximum wait time
-    waitFor.time   = data(3).String;
-    if ischar(waitFor.time)
-        waitFor.time = str2double(waitFor.time);
-        if isnan(waitFor.time)
+    % 5. max reaction time    
+    event.keyTime = answersOfQuestions(5).String;    
+    if ischar(event.keyTime)
+        event.keyTime = str2double(event.keyTime);
+        if isnan(event.keyTime)
             errordlg('Invalid time provided for the Wait for Press function')
             return
         end
-    elseif isempty(waitFor.time)
-        waitFor.time = inf;
+    elseif isempty(event.keyTime)
+        event.keyTime = inf;
     end
-  
-     % 4. wait bar
-    waitFor.waitBar = data(4).Value;    
     
-    % 5. wait bar position
-    waitFor.barLocation = data(5).String{data(5).Value}; 
+    % 6. wait bar
+    event.waitBar = answersOfQuestions(6).Value;    
     
-    out = waitFor;
+    % 7. wait bar position
+    event.barLocation = answersOfQuestions(7).String{answersOfQuestions(7).Value}; 
+        
+    % 8. random order
+    event.random = answersOfQuestions(8).String;
+    
+    out = event; %No other data needed
 end

@@ -87,7 +87,7 @@ function out = init()
 end
 
 function out = enabled()
-	out = true; %If this function returns false, it will not be included.
+	out = false; %If this function returns false, it will not be included.
 end
 
 function out = getLoadFunction()
@@ -108,7 +108,11 @@ function out = getRunFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
 % Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
+<<<<<<< HEAD
     out = 'Screen(''Flip'',windowPtr, GetSecs()+event.delay, double(~event.clear),1);';
+=======
+    out = 'Screen(''Flip'',windowPtr, 0, double(~event.clear));';
+>>>>>>> refs/remotes/origin/Jonas
 end
 
 function out = getQuestStruct()
