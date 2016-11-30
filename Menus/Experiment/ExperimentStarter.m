@@ -195,15 +195,15 @@ catch e
                 blocknr = sprintf('Block %i',i);
                 for j=1:length(Data{i})
                     dataiter = dataiter + 1;
-                    % Add extra collums
-                    data(dataiter).date    = dateNtime;
-                    data(dataiter).subjectId = subjectId;
-                    data(dataiter).blocknr = blocknr;
                     eventdata = Data{i}{j};
                     fnames = fieldnames(eventdata);
                     for k=1:length(fnames)
                         eval(sprintf('data(dataiter).%s = eventdata.%s;',fnames{k}, fnames{k}));            
                     end
+		    % Add extra collums
+                    data(dataiter).date    = dateNtime;
+                    data(dataiter).subjectId = subjectId;
+                    data(dataiter).blocknr = blocknr;
                 end
             end
             exportStructToCSV(data,['Results_' name '.csv'],1);
