@@ -112,7 +112,7 @@ function out = getRunFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
     out = ['Screen(''PutImage'', windowPtr, event.im);\r\n' ...
-        'Screen(''Flip'', windowPtr, GetSecs()+event.delay, double(~event.clear));\r\n'...
+        'Screen(''Flip'', windowPtr, 0, 0);\r\n'...
         '[~,name,ext] = fileparts(event.data); \n\r' ...
         'reply.image = strcat(name,ext); \r\n'...
         'image = reply.image; \r\n'...
@@ -137,20 +137,11 @@ function out = getQuestStruct()
     q(1).name = 'event Name';
     q(1).sort = 'edit';
     q(1).data = 'Draw Image';
+        
+    q(2).name = 'Behaviors';
+    q(2).sort = 'text';
+    q(2).data = 'Select options:';
     
-    q(2).name = 'delay';
-    q(2).sort = 'edit';
-    q(2).data = '0';
-    q(2).toolTip = 'x seconds before the images gets shown';
-    
-    q(3).name = 'Behaviors';
-    q(3).sort = 'text';
-    q(3).data = 'Select options:';
-    
-    q(4).name = '';
-    q(4).sort = 'checkbox';
-    q(4).data = 'clear screen';
-    q(4).toolTip = 'If checked: Clears the screen and then shows the image';
     out = q; %See eventEditor
 end
 
@@ -158,13 +149,6 @@ function out = getEventStruct(answersOfQuestions)
 % event.data will be filled with the needed files specified in dataType()
     event = struct;
     event.alias = answersOfQuestions(1).String;
-    %Delay
-    event.delay = str2double( answersOfQuestions(2).Answer ) ;
-    if isnan(event.delay)
-       event.delay = 0; 
-    end
-    %Clear screen
-    event.clear = answersOfQuestions(4).Value;
     
     out = event; %No other data needed
 end
