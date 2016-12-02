@@ -1,3 +1,4 @@
+function updateMSP()
 %% Settings
 % master
 % development
@@ -72,3 +73,4 @@ catch e
 end
 
 fprintf('-------------------Done-----------------\n');
+end
