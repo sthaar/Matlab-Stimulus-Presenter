@@ -74,9 +74,10 @@ function start_OpeningFcn(hObject, eventdata, handles, varargin)
     addpath(genpath('Menus'));
     
     %% Check data & experiment path
-    if ~exist('Data','dir')==7
+    if ~(exist('Data','dir')==7)
         mkdir('Data');
-    elseif ~exist('Experiments','dir')==7
+    end
+    if ~(exist('Experiments','dir')==7)
         mkdir('Experiments');
     end
     %% PsychToolbox
