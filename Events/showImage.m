@@ -137,11 +137,7 @@ function out = getQuestStruct()
     q(1).name = 'event Name';
     q(1).sort = 'edit';
     q(1).data = 'Draw Image';
-        
-    q(2).name = 'Behaviors';
-    q(2).sort = 'text';
-    q(2).data = 'Select options:';
-    
+
     out = q; %See eventEditor
 end
 
