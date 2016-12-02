@@ -39,7 +39,7 @@ try
     % Download
     fprintf('-------------Starting Update------------\n');
     fprintf('Downloading update.zip...\n');
-    path = websave('update.zip','https://github.com/etteerr/Matlab-Stimulus-Presenter/zipball/master');
+    path = websave('update.zip', repo);
     
     % Extract
     fprintf('Extracting update...\n');
