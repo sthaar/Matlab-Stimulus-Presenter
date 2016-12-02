@@ -101,7 +101,7 @@ function out = getLoadFunction()
 %               'The second line!', ...
 %               'Still the second line!\r\nThe Third line!'];
 % Screen('Flip', windowPtr [, when] [, dontclear] [, dontsync] [, multiflip]);
-    out = 'event.im = imread(event.data);'; %may be multiline!
+    out = '[event.im, ~, reply.didResize] = imageSizeCheck(imread(event.data), windowPtr);'; %may be multiline!
 end
 
 function out = getRunFunction()
