@@ -114,7 +114,7 @@ for i=1:length(creator) %For block in blocks
         end
             
         
-        %Get random data from dataset if random is needed
+        %Get data from dataset, if random is needed take it random
         if isfield(event, 'dataset') && ~isempty(datasets)
             dataset = datasets(event.dataset);
             index = 0;
@@ -137,6 +137,12 @@ for i=1:length(creator) %For block in blocks
             if ~event.putBack
                 dataset(index) = [];
                 datasets(event.dataset) = dataset;
+                if ~event.randomData % Then shift back the index
+                    datasetIters(event.dataset) = datasetIters(event.dataset) - 1;
+                    if (datasetIters(event.dataset) < 1)
+                        datasetIters(event.dataset) = 1;
+                    end
+                end
             end
         end
         events{j}.blockname = block.name;
