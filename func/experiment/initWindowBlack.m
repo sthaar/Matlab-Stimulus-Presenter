@@ -20,7 +20,11 @@ function [ handle ] = initWindowBlack(Message,priority,hideCursor )
 %%%
 % Priority, changes priority of the script. (0 = normal, 1 = high, 2 = max
 % (realtime))
-
+if strcmp(Message, 'debug')
+    debug = true;
+else
+    debug = false;
+end
 %Black screen
 screenColor = [0 0 0];
 
@@ -45,15 +49,23 @@ if length(screens)>1
 else
     screenNumber = max(screens);
 end
-handle = Screen('OpenWindow',screenNumber,screenColor);
+
+if debug
+    handle = Screen('OpenWindow',screenNumber,screenColor, [20 20 800 600]);
+else
+    handle = Screen('OpenWindow',screenNumber,screenColor);
 
 %Hide cursor
-if hideCursor
+if hideCursor && ~debug
     HideCursor;
 end
 
 %Set epic priority for epic timings
-Priority(2);
+if debug
+    Priority(0);
+else
+    Priority(priority);
+end
 
 %Set text settings
 Screen('TextFont',handle, 'Courier New');
@@ -73,10 +85,10 @@ Screen('Flip',handle);
 
 [secs] = KbWait(-1);
 if secs < 0.1
-    error('Keywait function not working correctly. Please try again...');
     clear all
     clear mex
     clear functions
+    error('Keywait function not working correctly. Please try again...');
 end
 Screen('Flip',handle);
 end
